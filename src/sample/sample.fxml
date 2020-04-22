@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.GridPane?>
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
@@ -8,23 +10,25 @@
 <?import javafx.scene.text.Font?>
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
-   <children>
-      <TextField fx:id="textfeld" layoutX="22.0" layoutY="315.0" promptText="Type here" />
-      <Button fx:id="knopf" layoutX="160.0" layoutY="152.0" mnemonicParsing="false" onAction="#methode1" text="CLICK BAIT">
-         <font>
-            <Font size="45.0" />
-         </font>
-      </Button>
-      <Label fx:id="label" layoutX="243.0" layoutY="14.0" text="HEWO">
-         <font>
-            <Font name="Franklin Gothic Medium Cond" size="50.0" />
-         </font>
-      </Label>
-      <Button fx:id="knopf2" layoutX="472.0" layoutY="313.0" mnemonicParsing="false" onAction="#methode2" text="Button">
-         <font>
-            <Font name="AR CENA" size="27.0" />
-         </font>
-      </Button>
-      <ProgressBar fx:id="fortschritt" layoutX="200.0" layoutY="105.0" prefWidth="200.0" progress="0.0" />
-   </children>
+    <children>
+        <TextField fx:id="textfeld" layoutX="22.0" layoutY="315.0" promptText="Type here" />
+        <Button fx:id="knopf" layoutX="160.0" layoutY="152.0" mnemonicParsing="false" onAction="#methode1" text="CLICK BAIT">
+            <font>
+                <Font size="45.0" />
+            </font>
+        </Button>
+        <Label fx:id="label" layoutX="243.0" layoutY="14.0" text="HEWO">
+            <font>
+                <Font name="Franklin Gothic Medium Cond" size="50.0" />
+            </font>
+        </Label>
+        <Button fx:id="knopf2" layoutX="472.0" layoutY="313.0" mnemonicParsing="false" onAction="#methode2" text="Button">
+            <font>
+                <Font name="AR CENA" size="27.0" />
+            </font>
+        </Button>
+        <ProgressBar fx:id="fortschritt" layoutX="200.0" layoutY="105.0" prefWidth="200.0" progress="0.0" />
+    </children>
 </AnchorPane>
+
+

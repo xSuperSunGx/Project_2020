@@ -36,10 +36,11 @@ public class Controller implements Initializable{
 	}
 	@FXML
 	public void methode2() {
-		if(fortschritt.getProgress() == 1D) {
+		fortschritt.setProgress(fortschritt.getProgress()+0.1);
+		if(fortschritt.getProgress() >= 1D) {
 			fortschritt.setProgress(0);
 		}
-		fortschritt.setProgress(fortschritt.getProgress()+0.1);
-		
+		System.out.println(fortschritt.getProgress());
+
 	}
 }
