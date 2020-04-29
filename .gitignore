@@ -1,4 +1,5 @@
 .idea/
+*.MF
 
 *.iml
 /bin/
