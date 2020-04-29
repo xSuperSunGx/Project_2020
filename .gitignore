@@ -1,6 +1,6 @@
 .idea/
 *.MF
-
+com/
 *.ico
 *.iml
 /bin/
