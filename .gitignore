@@ -1,6 +1,7 @@
 .idea/
 *.MF
 
+*.ico
 *.iml
 /bin/
 *.project
