@@ -11,7 +11,7 @@ public class Workbench extends Application{
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("Login.fxml"));
         primaryStage.setTitle("Hello World");
         primaryStage.setAlwaysOnTop(true);
         primaryStage.setResizable(false);
