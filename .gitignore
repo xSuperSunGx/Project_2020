@@ -1,9 +1,9 @@
 .idea/
 *.MF
 com/
-*.ico
 *.iml
 /bin/
+/out/
 *.project
 *.classpath
 *.fxbuild
