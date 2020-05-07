@@ -1,4 +1,4 @@
-package utils.coding;
+package net.project_2020.server.utils.coding;
 
 public enum CodeHelper {
 

@@ -1,0 +1,32 @@
+#anchor{
+    -fx-background-color: #2F5956;
+}
+#input{
+    -fx-text-fill: whitesmoke;
+    -fx-prompt-text-fill: whitesmoke;
+}
+#input:focused{
+    -fx-prompt-text-fill: #39c57d;
+}
+.button{
+    -fx-background-color: #1A3E3B;
+
+
+}
+.button:hover{
+    -fx-background-color: #39c57d;
+}
+
+#silent{
+    -fx-background-color: #2F5956;
+}
+#silent2{
+    -fx-background-color: #212121;
+}
+#silent2:hover{
+    -fx-background-color: #535353;
+}
+#forget{
+    -fx-background-color: #2F5956;
+
+}

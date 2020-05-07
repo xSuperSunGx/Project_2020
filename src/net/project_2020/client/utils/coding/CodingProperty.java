@@ -1,21 +1,23 @@
-package utils.coding;
+package net.project_2020.client.utils.coding;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 public class CodingProperty {
 
-    public static String encode(int codeHelper, String text) {
+    public static final String seperate = "noah_timo";
+
+    public static synchronized String encode(int codeHelper, String text) {
         String string = "";
         switch (codeHelper) {
             case 1:
-                string = Base64.getEncoder().encodeToString(base_c(text, true, 7).getBytes(StandardCharsets.UTF_8));
+                string = base_c(Base64.getEncoder().encodeToString(text.getBytes(StandardCharsets.UTF_8)), true, 2);
                 break;
             case 2:
-                string = Base64.getEncoder().encodeToString(base_c(text, true, 10).getBytes(StandardCharsets.UTF_8));
+                string = base_c(Base64.getEncoder().encodeToString(text.getBytes(StandardCharsets.UTF_8)), true, 10);
                 break;
             case 3:
-                string = Base64.getEncoder().encodeToString(base_c(text, true, 8).getBytes(StandardCharsets.UTF_8));
+                string = base_c(Base64.getEncoder().encodeToString(text.getBytes(StandardCharsets.UTF_8)), true, 8);
                 break;
             case 4:
                 string = base_c(text, true, codeHelper);
@@ -29,30 +31,30 @@ public class CodingProperty {
 
     }
 
-    public static String decode(int codeHelper, String text) {
+    public static synchronized String decode(int codeHelper, String text) {
         String string = "";
         switch (codeHelper) {
             case 1:
-                string = base_c(new String(Base64.getDecoder().decode(text)), false, 7);
+                string = new String(Base64.getDecoder().decode(base_c(text, false, 2).getBytes(StandardCharsets.UTF_8)));
                 break;
             case 2:
-                string = base_c(new String(Base64.getDecoder().decode(text)), false, 10);
+                string = new String(Base64.getDecoder().decode(base_c(text, false, 10).getBytes(StandardCharsets.UTF_8)));
                 break;
             case 3:
-                string = base_c(new String(Base64.getDecoder().decode(text)), false, 8);
+                string = new String(Base64.getDecoder().decode(base_c(text, false, 8).getBytes(StandardCharsets.UTF_8)));
                 break;
             case 4:
                 string = base_c(text, false, codeHelper);
                 break;
             case 5:
-                string = new String(Base64.getDecoder().decode(text));
+                string = new String(Base64.getDecoder().decode(text.getBytes(StandardCharsets.UTF_8)));
                 break;
 
         }
         return string;
     }
 
-    private static String base_c(String text, boolean updown, int code) {
+    private static synchronized String base_c(String text, boolean updown, int code) {
         int character;
         String coding = "";
         for (int i = 0; i < text.length(); i++) {

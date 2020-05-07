@@ -1,0 +1,26 @@
+#pane {
+    -fx-background-color: #2F3259;
+}
+#menu{
+    -fx-background-color: #17192c;
+}
+#area{
+    -fx-background-color: #535AB2;
+    -fx-text-fill: whitesmoke;
+    -fx-prompt-text-fill: whitesmoke;
+}
+#send{
+    -fx-text-fill: whitesmoke;
+    -fx-background-color: #17192c;
+    -fx-background-radius: 200;
+}
+#send:hover{
+    -fx-text-fill: whitesmoke;
+    -fx-background-color: #009EFF;
+    -fx-background-radius: 200;
+
+}
+
+#menub{
+
+}
