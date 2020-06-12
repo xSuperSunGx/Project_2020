@@ -8,3 +8,4 @@ com/
 *.classpath
 *.fxbuild
 /lib/fontawesomefx-8.9.jar
+info.dat
