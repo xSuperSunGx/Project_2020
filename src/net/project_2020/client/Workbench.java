@@ -23,6 +23,7 @@ import net.project_2020.client.utils.coding.CodeHelper;
 import net.project_2020.client.utils.coding.CodingProperty;
 import net.project_2020.client.utils.mysql.MySQLManager;
 
+import java.io.File;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -36,10 +37,12 @@ public class Workbench extends Application{
     public static Stage mainstage;
     public static MySQLManager manager;
     public static String name = "";
+    public static String file_name;
     @Override
     public void start(Stage primaryStage) throws Exception{
+        manager = new MySQLManager(new File(file_name));
         Parent root = FXMLLoader.load(getClass().getResource("login/Login.fxml"));
-      //FXMLLoader root = FXMLLoader.load(getClass().getResource("chat/Chat.fxml"));
+        //FXMLLoader root = FXMLLoader.load(getClass().getResource("chat/Chat.fxml"));
         primaryStage.setTitle("Chat Messager - by Noah & Timo");
         //root.<ChatController>getController();
         primaryStage.setResizable(false);
@@ -57,8 +60,7 @@ public class Workbench extends Application{
 
     public static void main(String[] args) {
         error = new ErrorInit();
-        manager = new MySQLManager("localhost", "project", 3306, "project", "BuwuB2W55O8AfOQ6CuJoROP7yEt5BO");
-        manager.configureTables();
+        file_name = "info.dat";
         launch(args);
     }
 

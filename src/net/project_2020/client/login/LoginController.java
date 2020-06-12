@@ -132,6 +132,7 @@ public class LoginController implements Initializable{
 
 							Stage current = (Stage)((Node)e.getSource()).getScene().getWindow();
 							current.close();
+
 						});
 
 
@@ -163,6 +164,7 @@ public class LoginController implements Initializable{
 			});
 			stage.setScene(scene);
 			stage.show();
+
 
 		} catch (IOException e1) {
 			e1.printStackTrace();

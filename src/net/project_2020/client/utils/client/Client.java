@@ -52,6 +52,7 @@ public class Client extends Thread {
             in = new DataInputStream(client.getInputStream());
             out = new DataOutputStream(client.getOutputStream());
             this.sendMessage("Register");
+            cc.pane_chat.setDisable(false);
             return true;
 
         } catch (ConnectException e) {

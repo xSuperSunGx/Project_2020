@@ -1,6 +1,7 @@
 #pane {
     -fx-background-color: #2F3259;
 }
+
 #menu{
     -fx-background-color: #17192c;
 }
@@ -14,6 +15,11 @@
     -fx-background-color: #17192c;
     -fx-background-radius: 200;
 }
+
+#edit{
+    -fx-text-fill: whitesmoke;
+    -fx-background-color: #17192c;
+}
 #send:hover{
     -fx-text-fill: whitesmoke;
     -fx-background-color: #009EFF;
@@ -21,6 +27,15 @@
 
 }
 
-#menub{
+#select{
+    -fx-background-color: #2F3259;
+    -fx-background-radius: 0;
+    -fx-font-style: italic;
+    -fx-font-size: 18;
+}
 
+
+#s_field{
+    -fx-text-fill: #FC1681;
+    -fx-prompt-text-fill: #FC1681;
 }
