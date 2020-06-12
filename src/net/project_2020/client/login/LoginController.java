@@ -117,6 +117,7 @@ public class LoginController implements Initializable{
 				&& !password.getText().equalsIgnoreCase("")) {
 				if(Workbench.containsCompination(user.getText(), password.getText())) {
 					try {
+						Workbench.name = user.getText();
 
 
 						Parent root = FXMLLoader.load(getClass().getResource("../chat/Chat.fxml"));
@@ -126,7 +127,6 @@ public class LoginController implements Initializable{
 						chat.setResizable(false);
 						chat.setScene(scene);
 						chat.show();
-						Workbench.name = user.getText();
 						Platform.runLater(() -> {
 
 							Stage current = (Stage)((Node)e.getSource()).getScene().getWindow();

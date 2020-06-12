@@ -56,6 +56,7 @@ public class Client extends Thread {
             return true;
 
         } catch (ConnectException e) {
+            e.printStackTrace();
             Platform.runLater(() -> {
                 cc.sendDisconnect();
                 Workbench.mainstage.close();
@@ -64,6 +65,7 @@ public class Client extends Thread {
 
 
         } catch (IOException e) {
+            e.printStackTrace();
             Platform.runLater(() -> {
                 cc.sendDisconnect();
                 Workbench.mainstage.close();

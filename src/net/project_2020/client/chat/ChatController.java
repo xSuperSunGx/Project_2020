@@ -358,6 +358,7 @@ public class ChatController implements Initializable {
             Workbench.manager.disconnect();
             Workbench.manager = MySQLManager.changeInformation(d_host.getText(), d_data.getText(), port, d_user.getText(), d_pass.getText());
             Workbench.manager.configureTables();
+
             ((Stage)((Node)e.getSource()).getScene().getWindow()).close();
         } else {
             sendErrorMessage("Invalid text fields", "Please be sure that you filled out all text fields", "Error");
