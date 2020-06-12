@@ -12,7 +12,6 @@ import com.jfoenix.controls.JFXPasswordField;
 import com.jfoenix.controls.JFXTextField;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
-import de.jensd.fx.glyphs.icons525.Icons525;
 import de.jensd.fx.glyphs.icons525.Icons525View;
 import javafx.animation.*;
 import javafx.application.Platform;
