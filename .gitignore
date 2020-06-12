@@ -7,3 +7,4 @@ com/
 *.project
 *.classpath
 *.fxbuild
+/lib/fontawesomefx-8.9.jar
