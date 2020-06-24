@@ -32,6 +32,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import net.project_2020.client.Workbench;
+import net.project_2020.client.utils.ErrorMessage;
 import net.project_2020.client.utils.mysql.MySQLManager;
 
 public class LoginController implements Initializable{
@@ -120,7 +121,7 @@ public class LoginController implements Initializable{
 						Workbench.name = user.getText();
 
 
-						Parent root = FXMLLoader.load(getClass().getResource("../chat/Chat.fxml"));
+						Parent root = FXMLLoader.load(getClass().getClassLoader().getResource(Workbench.file_prefix + "chat/Chat.fxml"));
 						Stage chat = new Stage();
 						Scene scene = new Scene(root, 975, 546);
 						chat.setTitle("Chat Messager - by Noah & Timo");
@@ -141,13 +142,13 @@ public class LoginController implements Initializable{
 						throwables.printStackTrace();
 					}
 				} else {
-					sendErrorMessage("Failed to login", "Incorrect Password or Username!", "Error");
+					ErrorMessage.sendErrorMessage("Failed to login", "Incorrect Password or Username!", "Error");
 
 				}
 
 
 		} else {
-			sendErrorMessage("Invalid Username or password", "Please fill in the correct informations", "Error");
+			ErrorMessage.sendErrorMessage("Invalid Username or password", "Please fill in the correct informations", "Error");
 		}
 	}
 	@FXML
@@ -170,24 +171,7 @@ public class LoginController implements Initializable{
 		}
 	}
 
-	public void sendErrorMessage(String header, String text, String title) {
-		Workbench.error.setHeader(header);
-		Workbench.error.setText(text);
-		Toolkit.getDefaultToolkit().beep();
-		try {
-			Parent parent = FXMLLoader.load(getClass().getResource("../error/Error.fxml"));
-			Stage stage = new Stage();
-			stage.setTitle(title);
-			stage.getIcons().clear();
-			stage.getIcons().add(new Image(getClass().getResourceAsStream("../icons/Error.png")));
-			stage.setResizable(false);
-			Scene scene = new Scene(parent, 380, 160);
-			stage.setScene(scene);
-			stage.show();
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-	}
+
 
 
 }

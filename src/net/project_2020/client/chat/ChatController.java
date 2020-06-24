@@ -33,6 +33,7 @@ import javafx.scene.shape.Shape;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import net.project_2020.client.Workbench;
+import net.project_2020.client.utils.ErrorMessage;
 import net.project_2020.client.utils.client.Client;
 import net.project_2020.client.utils.coding.CodeHelper;
 import net.project_2020.client.utils.coding.CodingProperty;
@@ -42,6 +43,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
@@ -123,7 +125,7 @@ public class ChatController implements Initializable {
 
         Parent root = null;
         try {
-            root = FXMLLoader.load(getClass().getResource("../../database/Database.fxml"));
+            root = FXMLLoader.load(getClass().getClassLoader().getResource(Workbench.file_prefix + "database/Database.fxml"));
             Stage stage = new Stage();
             stage.setTitle("Database Configuration");
             stage.setAlwaysOnTop(true);
@@ -219,11 +221,12 @@ public class ChatController implements Initializable {
         Toolkit.getDefaultToolkit().beep();
         this.pane_chat.setDisable(true);
         try {
-            Parent parent = FXMLLoader.load(getClass().getResource("../error/Error.fxml"));
+            Parent parent = FXMLLoader.load(getClass().getClassLoader().getResource(Workbench.file_prefix + "error/Error.fxml"));
             Stage stage = new Stage();
             stage.setTitle("Error");
             stage.getIcons().clear();
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("../icons/Error.png")));
+            stage.setAlwaysOnTop(true);
+            stage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream(Workbench.file_prefix + "icons/Error.png")));
             stage.setResizable(false);
             Scene scene = new Scene(parent, 380, 160);
             stage.setScene(scene);
@@ -241,7 +244,8 @@ public class ChatController implements Initializable {
             addMessage(message, "Du");
             return;
         }
-        this.chat.appendText("[" + new SimpleDateFormat("HH:mm:ss").format(new Date()) + "] " + nickname + " » " + decode);
+        this.chat.appendText("[" + new SimpleDateFormat("HH:mm:ss").format(new Date()) + "] " + nickname + " » " + decode
+                .replaceAll("oe", "ö").replaceAll("ae", "ä").replaceAll("ue","ü").replaceAll("%S", "ß"));
         this.chat.appendText(System.lineSeparator());
 
     }
@@ -250,7 +254,8 @@ public class ChatController implements Initializable {
     public void send() {
 
         if (!text.getText().equalsIgnoreCase("")) {
-            String message = CodingProperty.encode(CodeHelper.MESSAGE.getCode(), text.getText());
+            String message = CodingProperty.encode(CodeHelper.MESSAGE.getCode(), text.getText()
+                    .replaceAll("ö", "oe").replaceAll("ä", "ae").replaceAll("ü","ue").replaceAll("ß", "%S"));
             //this.addMessage(message, "Du");
             text.clear();
             Workbench.client.sendMessage(message);
@@ -352,7 +357,7 @@ public class ChatController implements Initializable {
             try {
                 port = Integer.parseInt(d_port.getText());
             }catch (NumberFormatException e1) {
-                sendErrorMessage("Failed to set the port!", "Please do only use numbers for the \"Port-field\"", "Error");
+                ErrorMessage.sendErrorMessage("Failed to set the port!", "Please do only use numbers for the \"Port-field\"", "Error");
                 return;
             }
             Workbench.manager.disconnect();
@@ -361,7 +366,7 @@ public class ChatController implements Initializable {
 
             ((Stage)((Node)e.getSource()).getScene().getWindow()).close();
         } else {
-            sendErrorMessage("Invalid text fields", "Please be sure that you filled out all text fields", "Error");
+            ErrorMessage.sendErrorMessage("Invalid text fields", "Please be sure that you filled out all text fields", "Error");
         }
     }
     @FXML
@@ -371,7 +376,7 @@ public class ChatController implements Initializable {
             try {
                 port = Integer.parseInt(s_port.getText());
             }catch (NumberFormatException e1) {
-                sendErrorMessage("Failed to set the port!", "Please do only use numbers for the \"Port-field\"", "Error");
+                ErrorMessage.sendErrorMessage("Failed to set the port!", "Please do only use numbers for the \"Port-field\"", "Error");
                 return;
             }
             Workbench.client = new Client(s_host.getText(), port, Workbench.name, this);
@@ -380,26 +385,9 @@ public class ChatController implements Initializable {
                 Workbench.client.start();
             }
         } else {
-            sendErrorMessage("Invalid text fields", "Please be sure that you filled out all text fields", "Error");
+            ErrorMessage.sendErrorMessage("Invalid text fields", "Please be sure that you filled out all text fields", "Error");
         }
     }
-    public void sendErrorMessage(String header, String text, String title) {
-        Workbench.error.setHeader(header);
-        Workbench.error.setText(text);
-        Toolkit.getDefaultToolkit().beep();
-        try {
-            Parent parent = FXMLLoader.load(getClass().getResource("../error/Error.fxml"));
-            Stage stage = new Stage();
-            stage.setTitle(title);
-            stage.getIcons().clear();
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("../icons/Error.png")));
-            stage.setResizable(false);
-            Scene scene = new Scene(parent, 380, 160);
-            stage.setScene(scene);
-            stage.show();
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        }
-    }
+
 
 }

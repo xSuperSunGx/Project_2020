@@ -47,8 +47,8 @@ public class ServerConnection extends Thread{
                 format = new PacketFormat(decode);
                 System.out.println(!format.getMessage().equalsIgnoreCase("close"));
                 if(!format.getMessage().equalsIgnoreCase("close")) {
-                    System.out.println(format.getMessage());
-                    System.out.println(format.getNickname());
+                   // System.out.println(format.getMessage());
+                    //System.out.println(format.getNickname());
                     System.out.println(format.getNickname() + " > " + CodingProperty.decode(CodeHelper.MESSAGE.getCode(), format.getMessage()));
                     Server.sendToAllClients(line);
                 } else {
@@ -68,7 +68,6 @@ public class ServerConnection extends Thread{
     }
 
     public synchronized void disconnect() throws IOException {
-        System.out.println(super.getName() + " hat die Verbindung getrennt!");
         sendToClientFromServer("close");
 
         Server.connections.remove(this);

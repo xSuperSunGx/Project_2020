@@ -35,11 +35,13 @@ public class Server extends Thread{
         try {
             for (ServerConnection sc : connections) {
                 sc.disconnect();
-                Thread.currentThread().interrupt();
             }
             ss.close();
+            Thread.sleep(5000);
             System.exit(0);
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }

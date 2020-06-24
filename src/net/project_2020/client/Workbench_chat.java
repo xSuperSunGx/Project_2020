@@ -22,7 +22,6 @@ public class Workbench_chat extends Application{
     public static Stage mainstage;
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Workbench.manager = new MySQLManager(new File(Workbench.file_name));
 
         Parent root = FXMLLoader.load(getClass().getResource("chat/Chat.fxml"));
         primaryStage.setTitle("Chat Messager - by Noah & Timo");
@@ -31,6 +30,7 @@ public class Workbench_chat extends Application{
         primaryStage.setScene(scene);
         primaryStage.show();
         mainstage = primaryStage;
+        Workbench.manager = new MySQLManager(new File(Workbench.file_name), mainstage);
     }
 
     public static void main(String[] args) {

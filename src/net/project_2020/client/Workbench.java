@@ -38,9 +38,9 @@ public class Workbench extends Application{
     public static MySQLManager manager;
     public static String name = "";
     public static String file_name;
+    public static final String file_prefix = "net/project_2020/client/";
     @Override
     public void start(Stage primaryStage) throws Exception{
-        manager = new MySQLManager(new File(file_name));
         Parent root = FXMLLoader.load(getClass().getResource("login/Login.fxml"));
         //FXMLLoader root = FXMLLoader.load(getClass().getResource("chat/Chat.fxml"));
         primaryStage.setTitle("Chat Messager - by Noah & Timo");
@@ -56,6 +56,7 @@ public class Workbench extends Application{
         });
         primaryStage.show();
         mainstage = primaryStage;
+        manager = new MySQLManager(new File(file_name), mainstage);
     }
 
     public static void main(String[] args) {

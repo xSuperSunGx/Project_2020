@@ -8,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import net.project_2020.client.Workbench;
+import net.project_2020.client.utils.ErrorMessage;
 import net.project_2020.client.utils.coding.CodeHelper;
 import net.project_2020.client.utils.coding.CodingProperty;
 
@@ -58,7 +59,7 @@ public class MySQLManager {
 
     //String host, String database, int port, String username, String password
     //"localhost", "project", 3306, "project", "BuwuB2W55O8AfOQ6CuJoROP7yEt5BO"
-    public MySQLManager(File file) {
+    public MySQLManager(File file, Stage primarystage) {
         this.host = "localhost";
         this.database = "project";
         this.port = 3306;
@@ -87,15 +88,17 @@ public class MySQLManager {
                 }
                 configureTables();
             } else {
-                Parent root = FXMLLoader.load(getClass().getResource("../../database/Database.fxml"));
                 Stage stage = new Stage();
+                Parent root = FXMLLoader.load(MySQLManager.class.getClassLoader().getResource("net/project_2020/client/database/Database.fxml"));
                 stage.setTitle("Database Configuration");
                 stage.setAlwaysOnTop(true);
                 stage.setMinWidth(460);
                 stage.setMinHeight(390);
                 stage.setOnCloseRequest(event -> {
-                    event.consume();
-                    sendErrorMessage("Failed to conect to database!", "On the first start of the program, you must fill in your data!", "MySQL-Connection Error");
+                    if(primarystage.isShowing()) {
+                        ErrorMessage.sendErrorMessage("Failed to conect to database!", "On the first start of the program, you must fill in your data!", "MySQL-Connection Error");
+                        event.consume();
+                    }
                 });
                 Scene scene = new Scene(root, 460, 390);
                 stage.setScene(scene);
@@ -163,24 +166,7 @@ public class MySQLManager {
         }
     }
 
-    public void sendErrorMessage(String header, String text, String title) {
-        Workbench.error.setHeader(header);
-        Workbench.error.setText(text);
-        Toolkit.getDefaultToolkit().beep();
-        try {
-            Parent parent = FXMLLoader.load(getClass().getResource("../../error/Error.fxml"));
-            Stage stage = new Stage();
-            stage.setTitle(title);
-            stage.getIcons().clear();
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("../../icons/Error.png")));
-            stage.setResizable(false);
-            Scene scene = new Scene(parent, 380, 160);
-            stage.setScene(scene);
-            stage.show();
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        }
-    }
+
 
     public static MySQLManager changeInformation(String host, String database, int port, String username, String password) {
 
@@ -198,7 +184,7 @@ public class MySQLManager {
                 storage.save();
             }
 
-            return new MySQLManager(file);
+            return new MySQLManager(file, Workbench.mainstage);
 
 
 

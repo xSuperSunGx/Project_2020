@@ -109,7 +109,7 @@ public class Client extends Thread {
         try {
             PacketFormat format;
             while (!this.isStopped()) {
-                while(in.available() == 0) {
+                while(!this.isStopped() && in.available() == 0) {
                     Thread.sleep(1);
                 }
                 String input = CodingProperty.decode(CodeHelper.COMMUNICATION.getCode(), in.readUTF());
@@ -121,10 +121,13 @@ public class Client extends Thread {
                     cc.addMessage(format.getMessage(), format.getNickname());
                 } else {
                     stopp = true;
+                    disconnect();
                 }
             }
+            Platform.runLater(() -> {
 
-            cc.sendDisconnect();
+                cc.sendDisconnect();
+            });
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }

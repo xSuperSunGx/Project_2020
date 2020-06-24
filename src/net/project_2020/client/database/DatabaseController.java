@@ -13,6 +13,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import net.project_2020.client.Workbench;
+import net.project_2020.client.utils.ErrorMessage;
 import net.project_2020.client.utils.mysql.MySQLManager;
 
 import java.awt.*;
@@ -43,7 +44,7 @@ public class DatabaseController implements Initializable {
             try {
                 port = Integer.parseInt(d_port.getText());
             }catch (NumberFormatException e1) {
-                sendErrorMessage("Failed to set the port!", "Please do only use numbers for the \"Port-field\"", "Error");
+                ErrorMessage.sendErrorMessage("Failed to set the port!", "Please do only use numbers for the \"Port-field\"", "Error");
                 return;
             }
             Workbench.manager.disconnect();
@@ -51,26 +52,9 @@ public class DatabaseController implements Initializable {
             Workbench.manager.configureTables();
             ((Stage)((Node)e.getSource()).getScene().getWindow()).close();
         } else {
-            sendErrorMessage("Invalid text fields", "Please be sure that you filled out all text fields", "Error");
+            ErrorMessage.sendErrorMessage("Invalid text fields", "Please be sure that you filled out all text fields", "Error");
         }
     }
 
-    public void sendErrorMessage(String header, String text, String title) {
-        Workbench.error.setHeader(header);
-        Workbench.error.setText(text);
-        Toolkit.getDefaultToolkit().beep();
-        try {
-            Parent parent = FXMLLoader.load(getClass().getResource("../error/Error.fxml"));
-            Stage stage = new Stage();
-            stage.setTitle(title);
-            stage.getIcons().clear();
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("../icons/Error.png")));
-            stage.setResizable(false);
-            Scene scene = new Scene(parent, 380, 160);
-            stage.setScene(scene);
-            stage.show();
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        }
-    }
+
 }
