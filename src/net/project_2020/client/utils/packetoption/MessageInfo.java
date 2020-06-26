@@ -1,6 +1,8 @@
 package net.project_2020.client.utils.packetoption;
 
-public class MessageInfo {
+import java.io.Serializable;
+
+public class MessageInfo implements Serializable {
 
     private String nickname;
     private String message;
