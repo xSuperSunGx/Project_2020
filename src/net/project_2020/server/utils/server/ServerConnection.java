@@ -2,30 +2,38 @@ package net.project_2020.server.utils.server;
 
 import net.project_2020.server.utils.coding.CodeHelper;
 import net.project_2020.server.utils.coding.CodingProperty;
-import net.project_2020.server.utils.coding.PacketFormat;
+import net.project_2020.server.utils.mysql.MySQLManager;
+import net.project_2020.utils.packetoption.ServerCommunication;
+import net.project_2020.utils.packetoption.Tag;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.List;
 
 public class ServerConnection extends Thread{
 
 
     private Socket s;
-    private DataInputStream in;
-    private DataOutputStream out;
+    private ObjectInputStream in;
+    private ObjectOutputStream out;
     private boolean stopped;
+    private MySQLManager mysql;
 
-
-    public ServerConnection(String name, Socket s) {
-        super(name);
-        this.s = s;
-        stopped = false;
+    public void setMysql(MySQLManager mysql) {
+        this.mysql = mysql;
     }
 
+    public ServerConnection(Socket s, MySQLManager mysql) {
+        this.s = s;
+
+        stopped = false;
+        this.mysql = mysql;
+    }
+
+
+    public void setClientName(String name) {
+        super.setName(name);
+    }
 
 
 
@@ -33,27 +41,103 @@ public class ServerConnection extends Thread{
     @Override
     public void run() {
         try {
-            in = new DataInputStream(s.getInputStream());
-            out = new DataOutputStream(s.getOutputStream());
-            String line;
-            String decode;
-            PacketFormat format;
+            in = new ObjectInputStream(s.getInputStream());
+            out = new ObjectOutputStream(s.getOutputStream());
+            Object o;
+            ServerCommunication message;
+            List<ServerCommunication> messages;
             while(!this.isStopped()) {
                 while(in.available() == 0) {
                     Thread.sleep(1);
                 }
-                line = in.readUTF();
-                decode = CodingProperty.decode(CodeHelper.COMMUNICATION.getCode(), line);
-                format = new PacketFormat(decode);
-                System.out.println(!format.getMessage().equalsIgnoreCase("close"));
-                if(!format.getMessage().equalsIgnoreCase("close")) {
-                   // System.out.println(format.getMessage());
-                    //System.out.println(format.getNickname());
-                    System.out.println(format.getNickname() + " > " + CodingProperty.decode(CodeHelper.MESSAGE.getCode(), format.getMessage()));
-                    Server.sendToAllClients(line);
-                } else {
-                    stopped = true;
+                o = readFromClient();
+                if(o instanceof ServerCommunication) {
+                    message = (ServerCommunication) o;
+
+                    switch (message.getTag()) {
+                        case CONNECTION:
+                            if(message.getMessage().equalsIgnoreCase("close")) {
+                                this.stopped = true;
+                            }
+
+                            break;
+                        case MESSAGE:
+
+
+                            break;
+                        case LOGIN:
+                            ServerCommunication s = new ServerCommunication();
+                            s.setTag(Tag.LOGIN);
+                            if(mysql.containsCompination(message.getNickname(), message.getMessage())) {
+                                s.setMessage(new Boolean(true).toString());
+                                super.setName(message.getNickname());
+                            } else {
+                                s.setMessage(new Boolean(false).toString());
+
+                            }
+                            sendToClientFromServer(s);
+                            break;
+                        case REGISTER:
+                            s = new ServerCommunication();
+                            s.setTag(Tag.REGISTER);
+                            if(mysql.containsUsername(message.getNickname())) {
+                                s.setMessage(new Boolean(false).toString()); //Name existiert schon -> false
+                            } else {
+                                s.setMessage(new Boolean(true).toString()); //Name existiert noch nicht -> true
+                                mysql.registerAccount(message.getNickname(), message.getMessage());
+                                super.setName(message.getNickname());
+                            }
+
+                            sendToClientFromServer(s);
+                            break;
+                    }
+
+                } else if(o instanceof List) {
+                    messages = (List<ServerCommunication>) o;
+                    messages.forEach(serverCommunication -> {
+                        ServerCommunication s;
+                        switch (serverCommunication.getTag()) {
+                            case CONNECTION:
+                                if(serverCommunication.getMessage().equalsIgnoreCase("close")) {
+                                    this.stopped = true;
+                                }
+
+                                break;
+                            case MESSAGE:
+
+
+                                break;
+                            case LOGIN:
+                                s = new ServerCommunication();
+                                s.setTag(Tag.LOGIN);
+                                if(mysql.containsCompination(serverCommunication.getNickname(), serverCommunication.getMessage())) {
+                                    s.setMessage(new Boolean(true).toString());
+                                    super.setName(serverCommunication.getNickname());
+                                } else {
+                                    s.setMessage(new Boolean(false).toString());
+
+                                }
+                                sendToClientFromServer(s);
+                                break;
+                            case REGISTER:
+                                s = new ServerCommunication();
+                                s.setTag(Tag.REGISTER);
+                                if(mysql.containsUsername(serverCommunication.getNickname())) {
+                                    s.setMessage(new Boolean(false).toString()); //Name existiert schon -> false
+                                } else {
+                                    s.setMessage(new Boolean(true).toString()); //Name existiert noch nicht -> true
+                                    mysql.registerAccount(serverCommunication.getNickname(), serverCommunication.getMessage());
+                                    super.setName(serverCommunication.getNickname());
+                                }
+
+                                sendToClientFromServer(s);
+                                break;
+                        }
+                    });
                 }
+
+
+
 
             }
             System.out.println(super.getName() + " hat die Verbindung getrennt!");
@@ -94,21 +178,33 @@ public class ServerConnection extends Thread{
     }
 
 
-    public synchronized void sendToClient(String message) {
+    public synchronized void sendToClient(Object message) {
         try {
-            out.writeUTF(message);
+            out.writeObject(message);
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public synchronized  void sendToClientFromServer(String message) {
+    public synchronized  void sendToClientFromServer(Object message) {
         try {
-            out.writeUTF(CodingProperty.encode(CodeHelper.COMMUNICATION.getCode(), message + CodingProperty.seperate + "Server"));
+
+            out.writeObject(message);
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public synchronized Object readFromClient() {
+        try {
+            return in.readObject();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

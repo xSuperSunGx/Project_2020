@@ -1,4 +1,4 @@
-package net.project_2020.client.utils.mysql;
+package net.project_2020.server.utils.mysql;
 
 import net.project_2020.client.utils.coding.CodeHelper;
 import net.project_2020.client.utils.coding.CodingProperty;

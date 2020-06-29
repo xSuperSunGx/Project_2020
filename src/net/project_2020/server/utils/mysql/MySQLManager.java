@@ -1,23 +1,19 @@
-package net.project_2020.client.utils.mysql;
+package net.project_2020.server.utils.mysql;
 
 
 import com.blogspot.debukkitsblog.util.FileStorage;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import net.project_2020.client.Workbench;
 import net.project_2020.client.utils.ErrorMessage;
 import net.project_2020.client.utils.coding.CodeHelper;
 import net.project_2020.client.utils.coding.CodingProperty;
 
-import java.awt.*;
 import java.io.*;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.net.URLConnection;
 import java.sql.*;
 import java.util.Scanner;
 
@@ -55,11 +51,61 @@ public class MySQLManager {
         return con;
     }
 
+    public boolean containsUsername(String name) {
+        try {
+            PreparedStatement st = this.con.prepareStatement("SELECT `username` FROM `accounts`");
+            ResultSet rs = st.executeQuery();
+            System.out.println(CodingProperty.encode(CodeHelper.INFORMATION.getCode(), name));
+            while (rs.next()) {
+                if(CodingProperty.decode(CodeHelper.INFORMATION.getCode(), rs.getString(1)).equalsIgnoreCase(name)) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return false;
+    }
+    public boolean containsCompination(String username, String passsword) {
+        try {
+            PreparedStatement st = this.con.prepareStatement("SELECT * FROM `accounts`");
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                if(CodingProperty.decode(CodeHelper.INFORMATION.getCode(), rs.getString("username"))
+                        .equalsIgnoreCase(username)
+                        && CodingProperty.decode(CodeHelper.INFORMATION.getCode(), rs.getString("password"))
+                        .equalsIgnoreCase(passsword)) {
+                    return true;
+                }
+            }
 
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return false;
+    }
+
+    public void registerAccount(String username, String password) {
+        try {
+            PreparedStatement st = this.con.prepareStatement("INSERT INTO `accounts` (`username`, `password`) VALUES (?,?)");
+            st.setString(1, CodingProperty.encode(CodeHelper.INFORMATION.getCode(), username));
+            st.setString(2, CodingProperty.encode(CodeHelper.INFORMATION.getCode(), password));
+            st.executeUpdate();
+
+
+
+
+
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
 
     //String host, String database, int port, String username, String password
     //"localhost", "project", 3306, "project", "BuwuB2W55O8AfOQ6CuJoROP7yEt5BO"
-    public MySQLManager(File file, Stage primarystage) {
+    public MySQLManager(File file) {
         this.host = "localhost";
         this.database = "project";
         this.port = 3306;
@@ -88,21 +134,49 @@ public class MySQLManager {
                 }
                 configureTables();
             } else {
-                Stage stage = new Stage();
-                Parent root = FXMLLoader.load(MySQLManager.class.getClassLoader().getResource("net/project_2020/client/database/Database.fxml"));
-                stage.setTitle("Database Configuration");
-                stage.setAlwaysOnTop(true);
-                stage.setMinWidth(460);
-                stage.setMinHeight(390);
-                stage.setOnCloseRequest(event -> {
-                    if(primarystage.isShowing()) {
-                        ErrorMessage.sendErrorMessage("Failed to conect to database!", "On the first start of the program, you must fill in your data!", "MySQL-Connection Error");
-                        event.consume();
-                    }
-                });
-                Scene scene = new Scene(root, 460, 390);
-                stage.setScene(scene);
-                stage.show();
+                Scanner s = new Scanner(System.in);
+                System.out.print("Please enter your MySQL-Hostname: ");
+                this.host = s.nextLine();
+                System.out.println();
+                System.out.print("Please enter your MySQL-Port: ");
+                this.port = s.nextInt();
+                System.out.println();
+                System.out.print("Please enter your MySQL-Database: ");
+                this.database = s.nextLine();
+                System.out.println();
+                System.out.print("Please enter your MySQL-Username: ");
+                this.username = s.nextLine();
+                System.out.println();
+                System.out.print("Please enter your MySQL-Password: ");
+                this.password = s.nextLine();
+                System.out.println();
+                System.out.println();
+                System.out.println("Connecting...");
+
+
+                MySQLData data = new MySQLData(host,database, port, username, CodingProperty.encode(CodeHelper.INFORMATION.getCode(), this.password));
+                storage.store("info", data);
+                storage.save();
+
+
+                MySQLData n = (MySQLData) storage.get("info");
+
+
+                this.host = n.getHost();
+                this.database = n.getDatabase();
+                this.port = n.getPort();
+                this.username = n.getUsername();
+                this.password = CodingProperty.decode(CodeHelper.INFORMATION.getCode(), n.getPassword());
+                try {
+                    con = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database + "?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&autoReconnect=true&characterEncoding=latin1&useConfigs=maxPerformance",
+                            username, password);
+
+                    System.out.println("§aMySQL-Connection successful!");
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+                configureTables();
+                s.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -168,32 +242,5 @@ public class MySQLManager {
 
 
 
-    public static MySQLManager changeInformation(String host, String database, int port, String username, String password) {
-
-       File file = new File("info.dat");
-        try {
-            if(!file.exists())file.createNewFile();
-            FileStorage storage = new FileStorage(file);
-            if(storage.get("info") == null) {
-                storage.store("info", new MySQLData(host, database, port, username, password));
-                storage.save();
-            } else {
-                MySQLData data = (MySQLData)storage.get("info");
-                data.setAll(host, database, port, username, password);
-                storage.store("info", data);
-                storage.save();
-            }
-
-            return new MySQLManager(file, Workbench.mainstage);
-
-
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-
-    }
 
 }

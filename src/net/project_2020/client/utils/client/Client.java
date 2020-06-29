@@ -1,13 +1,13 @@
 package net.project_2020.client.utils.client;
 
 import javafx.application.Platform;
-import javafx.scene.control.Alert;
 import net.project_2020.client.Workbench;
-import net.project_2020.client.chat.ChatController;
-import net.project_2020.client.utils.coding.CodeHelper;
-import net.project_2020.client.utils.coding.CodingProperty;
+import net.project_2020.client.login.Login;
 import net.project_2020.client.utils.coding.PacketFormat;
+import net.project_2020.utils.packetoption.ServerCommunication;
+import net.project_2020.utils.packetoption.Tag;
 
+import javax.swing.text.html.HTML;
 import java.io.*;
 import java.net.ConnectException;
 import java.net.Socket;
@@ -17,28 +17,22 @@ public class Client extends Thread {
     private String host;
     private int port;
     private Socket client;
-    private DataInputStream in;
-    private DataOutputStream out;
+    private ObjectInputStream in;
+    private ObjectOutputStream out;
     private boolean stopp;
-    private ChatController cc;
+    private Login login;
 
 
 
-    public Client(String host, int port, String nickname, ChatController chatController) {
-        super(nickname);
+
+    public Client(String host, int port, Login login) {
         this.host = host;
         this.port = port;
-        this.cc = chatController;
         this.stopp = false;
+        this.login = login;
     }
 
-    public Client(String host, int port, ChatController cc) {
 
-        this.host = host;
-        this.port = port;
-        this.cc = cc;
-        this.stopp = false;
-    }
 
     public void setClientName(String name) {
         super.setName(name);
@@ -49,16 +43,14 @@ public class Client extends Thread {
     public boolean connect() {
         try {
             client = new Socket(this.host, this.port);
-            in = new DataInputStream(client.getInputStream());
-            out = new DataOutputStream(client.getOutputStream());
-            this.sendMessage("Register");
-            cc.pane_chat.setDisable(false);
+            in = new ObjectInputStream(client.getInputStream());
+            out = new ObjectOutputStream(client.getOutputStream());
             return true;
 
         } catch (ConnectException e) {
             e.printStackTrace();
             Platform.runLater(() -> {
-                cc.sendDisconnect();
+                login.sendDisconnect();
                 Workbench.mainstage.close();
 
             });
@@ -67,7 +59,7 @@ public class Client extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
             Platform.runLater(() -> {
-                cc.sendDisconnect();
+                login.sendDisconnect();
                 Workbench.mainstage.close();
 
             });
@@ -79,7 +71,10 @@ public class Client extends Thread {
         if (client != null && !client.isClosed()) {
             try {
                 stopp = true;
-                sendMessage("close");
+                ServerCommunication s = new ServerCommunication();
+                s.setMessage("close");
+                s.setTag(Tag.CONNECTION);
+                sendObject(s);
 
                 sleep(1000);
                 client.close();
@@ -94,14 +89,59 @@ public class Client extends Thread {
         }
     }
 
-    public synchronized void sendMessage(String message) {
+    public synchronized void sendObject(Object message) {
 
         try {
-            out.writeUTF(CodingProperty.encode(CodeHelper.COMMUNICATION.getCode(), message + CodingProperty.seperate + super.getName()));
+            out.writeObject(message);
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public synchronized Object readObject() {
+        try {
+            return in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    public boolean loginAccount(String username, String password) {
+        ServerCommunication serverCommunication = new ServerCommunication();
+        serverCommunication.loginRequest( username,  password);
+
+        sendObject(serverCommunication);
+        try {
+            while (!this.isStopped() && in.available() == 0) {
+                Thread.sleep(1);
+            }
+            ServerCommunication s = (ServerCommunication) readObject();
+            return s.getMessage().equalsIgnoreCase("true");
+
+        }catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    public boolean registerAccount(String username, String password) {
+        ServerCommunication serverCommunication = new ServerCommunication();
+        serverCommunication.registerRequest( username,  password);
+
+        sendObject(serverCommunication);
+        try {
+            while (!this.isStopped() && in.available() == 0) {
+                Thread.sleep(1);
+            }
+            ServerCommunication s = (ServerCommunication) readObject();
+            return s.getMessage().equalsIgnoreCase("true");
+
+        }catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @Override
@@ -112,23 +152,41 @@ public class Client extends Thread {
                 while(!this.isStopped() && in.available() == 0) {
                     Thread.sleep(1);
                 }
-                String input = CodingProperty.decode(CodeHelper.COMMUNICATION.getCode(), in.readUTF());
-                format = new PacketFormat(input);
+                ServerCommunication serverCommunication = (ServerCommunication) in.readObject();
 
 
                 System.out.println("Empfangen");
-                if(!format.getMessage().equalsIgnoreCase("close")) {
-                    cc.addMessage(format.getMessage(), format.getNickname());
-                } else {
-                    stopp = true;
-                    disconnect();
+                switch (serverCommunication.getTag()) {
+                    case LOGIN:
+                    case REGISTER:
+
+                        if(serverCommunication.isFromServer()) {
+                            if(new Boolean(serverCommunication.getMessage())) {
+                                login.login = Login.ALLOWED;
+                            } else {
+                                login.login = Login.DENIED;
+                            }
+                        }
+
+                        break;
+                    case CONNECTION:
+                        break;
+                    case MESSAGE:
+                        if(serverCommunication.getMessage().equalsIgnoreCase("close") && serverCommunication.isFromServer()) {
+                            stopp = true;
+                            disconnect();
+                        }
+                        break;
                 }
+
             }
             Platform.runLater(() -> {
 
-                cc.sendDisconnect();
+                login.sendDisconnect();
             });
         } catch (InterruptedException | IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
 

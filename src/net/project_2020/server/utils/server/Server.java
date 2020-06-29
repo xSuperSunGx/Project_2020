@@ -3,9 +3,12 @@ package net.project_2020.server.utils.server;
 
 import net.project_2020.server.utils.coding.CodeHelper;
 import net.project_2020.server.utils.coding.CodingProperty;
+import net.project_2020.server.utils.mysql.MySQLManager;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -19,15 +22,19 @@ public class Server extends Thread{
     private Socket s;
     private ServerConnection sc;
     private boolean stop;
+    private MySQLManager mysql;
+    private ObjectOutputStream out;
+    private ObjectInputStream in;
 
     public int getPort() {
         return port;
     }
 
-    public Server(int port, String servername) {
+    public Server(int port, String servername, MySQLManager mySQLManager) {
         super(servername);
         this.port = port;
         stop = false;
+        this.mysql = mySQLManager;
     }
 
     public synchronized void disconnect() {
@@ -64,18 +71,16 @@ public class Server extends Thread{
         try {
             ss = new ServerSocket(this.port);
             System.out.println("Server listened on Port " + this.port);
-            String name;
-            String[] lol;
             while(!isStopped()) {
                 s = ss.accept();
                 System.out.println("Connecting...");
-                name = new DataInputStream(s.getInputStream()).readUTF();
-                name = CodingProperty.decode(CodeHelper.COMMUNICATION.getCode(), name);
-                lol = name.split(CodingProperty.seperate);
-                sc = new ServerConnection(lol[1], s);
+                in = new ObjectInputStream(s.getInputStream());
+                out = new ObjectOutputStream(s.getOutputStream());
+
+                sc = new ServerConnection(s, mysql);
                 sc.start();
                 connections.add(sc);
-                System.out.println(lol[1] + " hat den Server betreten!");
+                System.out.println(s + " hat den Server betreten!");
             }
         } catch (IOException e) {
             e.printStackTrace();

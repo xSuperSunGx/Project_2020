@@ -2,14 +2,11 @@ package net.project_2020.client.chat;
 
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXPasswordField;
-import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
-import com.sun.corba.se.spi.orbutil.threadpool.Work;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -17,47 +14,34 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextInputDialog;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Shape;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import net.project_2020.client.chat.chatbubble.ConversationView;
 import net.project_2020.client.Workbench;
-import net.project_2020.client.utils.ErrorMessage;
-import net.project_2020.client.utils.client.Client;
 import net.project_2020.client.utils.coding.CodeHelper;
 import net.project_2020.client.utils.coding.CodingProperty;
-import net.project_2020.client.utils.mysql.MySQLManager;
+import net.project_2020.utils.packetoption.ServerCommunication;
+import net.project_2020.utils.packetoption.Tag;
 
-import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.List;
 
 public class ChatController implements Initializable {
 
-    @FXML
-    public JFXButton send;
     @FXML
     public AnchorPane pane, pane_settings;
     @FXML
     public GridPane pane_chat;
     @FXML
-    public JFXTextArea text, chat;
+    public TextField text;
     @FXML
     public JFXButton b_settings, b_chat, d_edit, s_edit;
     @FXML
@@ -74,11 +58,15 @@ public class ChatController implements Initializable {
     public JFXPasswordField d_pass;
     public JFXTextField s_host;
     public JFXTextField s_port;
+    public ConversationView v;
 
     public static ChatController cs;
 
     public Stage stage;
 
+    public ConversationView getConversationView() {
+        return v;
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -86,16 +74,9 @@ public class ChatController implements Initializable {
         settingAnimation(cog_1, cog_2, cog_3, cog_4);
         titleAnimation(title);
         this.pane_chat.toFront();
-        this.send.setText("");
-        this.chat.setEditable(false);
-        this.chat.setFocusTraversable(false);
-        this.text.setPromptText("Nachricht schreiben");
-        manageMySQL(d_host, d_data, d_port, d_user, d_pass);
-        Workbench.client = new Client("localhost", 1304, Workbench.name, this);
-        boolean cennect = Workbench.client.connect();
-        if (cennect) {
-            Workbench.client.start();
-        }
+        v = new ConversationView();
+        this.pane_chat.add(v, 0, 0);
+
         Platform.runLater(() -> {
             ((Stage) pane.getScene().getWindow()).setOnCloseRequest(event -> {
                 System.out.println("Disconnect");
@@ -108,18 +89,6 @@ public class ChatController implements Initializable {
 
     }
 
-    private void manageMySQL(JFXTextField d_host, JFXTextField d_data, JFXTextField d_port, JFXTextField d_user, JFXPasswordField d_pass) {
-        d_host.setText(Workbench.manager.getHost());
-        d_data.setText(Workbench.manager.getDatabase());
-        d_port.setText(Workbench.manager.getPort() + "");
-        d_user.setText(Workbench.manager.getUsername());
-        d_pass.setText(CodingProperty.decode(CodeHelper.INFORMATION.getCode(), Workbench.manager.getPassword()));
-        d_host.setDisable(true);
-        d_data.setDisable(true);
-        d_port.setDisable(true);
-        d_user.setDisable(true);
-        d_pass.setDisable(true);
-    }
 
     private void editMySQL(JFXTextField d_host, JFXTextField d_data, JFXTextField d_port, JFXTextField d_user, JFXPasswordField d_pass) {
 
@@ -215,30 +184,12 @@ public class ChatController implements Initializable {
     }
 
 
-    public synchronized void sendDisconnect() {
-        Workbench.error.setHeader("Failed to Connect to Server!");
-        Workbench.error.setText("Please restart your game or check your internet connection");
-        Toolkit.getDefaultToolkit().beep();
-        this.pane_chat.setDisable(true);
-        try {
-            Parent parent = FXMLLoader.load(getClass().getClassLoader().getResource(Workbench.file_prefix + "error/Error.fxml"));
-            Stage stage = new Stage();
-            stage.setTitle("Error");
-            stage.getIcons().clear();
-            stage.setAlwaysOnTop(true);
-            stage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream(Workbench.file_prefix + "icons/Error.png")));
-            stage.setResizable(false);
-            Scene scene = new Scene(parent, 380, 160);
-            stage.setScene(scene);
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
 
-    }
 
-    public void addMessage(String message, String nickname) {
+
+
+    /*public void addMessage(String message, String nickname) {
         String decode = CodingProperty.decode(CodeHelper.MESSAGE.getCode(), message);
         if (nickname.equalsIgnoreCase(Workbench.client.getName())) {
             addMessage(message, "Du");
@@ -248,7 +199,7 @@ public class ChatController implements Initializable {
                 .replaceAll("oe", "ö").replaceAll("ae", "ä").replaceAll("ue","ü").replaceAll("%S", "ß"));
         this.chat.appendText(System.lineSeparator());
 
-    }
+    }*/
 
     @FXML
     public void send() {
@@ -258,7 +209,11 @@ public class ChatController implements Initializable {
                     .replaceAll("ö", "oe").replaceAll("ä", "ae").replaceAll("ü","ue").replaceAll("ß", "%S"));
             //this.addMessage(message, "Du");
             text.clear();
-            Workbench.client.sendMessage(message);
+            ServerCommunication s = new ServerCommunication();
+            s.setTag(Tag.MESSAGE);
+            s.setNickname(Workbench.client.getName());
+            s.setMessage(message);
+            Workbench.client.sendObject(s);
         }
     }
 
@@ -346,48 +301,6 @@ public class ChatController implements Initializable {
 
     }
 
-    @FXML
-    public void on_d_edit(ActionEvent e) {
-        if(!d_data.getText().equalsIgnoreCase("") &&
-                !d_host.getText().equalsIgnoreCase("") &&
-                !d_pass.getText().equalsIgnoreCase("") &&
-                !d_port.getText().equalsIgnoreCase("") &&
-                !d_user.getText().equalsIgnoreCase("")) {
-            int port = 3306;
-            try {
-                port = Integer.parseInt(d_port.getText());
-            }catch (NumberFormatException e1) {
-                ErrorMessage.sendErrorMessage("Failed to set the port!", "Please do only use numbers for the \"Port-field\"", "Error");
-                return;
-            }
-            Workbench.manager.disconnect();
-            Workbench.manager = MySQLManager.changeInformation(d_host.getText(), d_data.getText(), port, d_user.getText(), d_pass.getText());
-            Workbench.manager.configureTables();
-
-            ((Stage)((Node)e.getSource()).getScene().getWindow()).close();
-        } else {
-            ErrorMessage.sendErrorMessage("Invalid text fields", "Please be sure that you filled out all text fields", "Error");
-        }
-    }
-    @FXML
-    public void on_s_edit(ActionEvent e) {
-        if(!s_host.getText().equalsIgnoreCase("") && !s_port.getText().equalsIgnoreCase("")) {
-            int port = 3306;
-            try {
-                port = Integer.parseInt(s_port.getText());
-            }catch (NumberFormatException e1) {
-                ErrorMessage.sendErrorMessage("Failed to set the port!", "Please do only use numbers for the \"Port-field\"", "Error");
-                return;
-            }
-            Workbench.client = new Client(s_host.getText(), port, Workbench.name, this);
-            boolean cennect = Workbench.client.connect();
-            if (cennect) {
-                Workbench.client.start();
-            }
-        } else {
-            ErrorMessage.sendErrorMessage("Invalid text fields", "Please be sure that you filled out all text fields", "Error");
-        }
-    }
 
 
 }

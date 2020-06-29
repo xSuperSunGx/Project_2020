@@ -1,33 +1,25 @@
 package net.project_2020.client.login;
 
-import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ResourceBundle;
 
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXPasswordField;
 import com.jfoenix.controls.JFXTextField;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
-import de.jensd.fx.glyphs.icons525.Icons525;
-import de.jensd.fx.glyphs.icons525.Icons525View;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
@@ -36,11 +28,12 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import net.project_2020.client.Workbench;
 import net.project_2020.client.utils.ErrorMessage;
+import net.project_2020.client.utils.client.Client;
 import net.project_2020.client.utils.coding.CodeHelper;
 import net.project_2020.client.utils.coding.CodingProperty;
-import net.project_2020.client.utils.mysql.MySQLManager;
+import sun.rmi.runtime.Log;
 
-public class SignupController implements Initializable{
+public class SignupController extends Login implements Initializable{
 
     @FXML
     public AnchorPane pane;
@@ -63,6 +56,15 @@ public class SignupController implements Initializable{
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        Workbench.login = this;
+        Workbench.client =  new Client("localhost", 1304, Workbench.login);
+
+        if(!Workbench.client.connect()) {
+            super.sendDisconnect();
+            pane.setDisable(true);
+        } else {
+            Workbench.client.start();
+        }
 
         menu.setText("");
         menu2.setText("");
@@ -126,7 +128,7 @@ public class SignupController implements Initializable{
             stage.setTitle("Login - by NNoah & Timo");
             stage.setResizable(false);
             stage.setOnCloseRequest(event -> {
-                Workbench.manager.disconnect();
+                Workbench.client.disconnect();
             });
             stage.setScene(scene);
             stage.show();
@@ -138,38 +140,45 @@ public class SignupController implements Initializable{
 
     }
     @FXML
-    public void signup(ActionEvent e){
+    public void signup(ActionEvent e) {
         if(!user.getText().equalsIgnoreCase("")
                 && !password.getText().equalsIgnoreCase("") && !confirm.getText().equalsIgnoreCase("")) {
             if(password.getText().equals(confirm.getText())) {
-                if(!Workbench.containsUsername(user.getText())) {
+                Workbench.client.registerAccount(user.getText(), password.getText());
+                while(super.login == Login.NEUTRAL) {
                     try {
-                        PreparedStatement st = Workbench.manager.getConnection().prepareStatement("INSERT INTO `accounts` (`username`, `password`) VALUES (?,?)");
-                        st.setString(1, CodingProperty.encode(CodeHelper.INFORMATION.getCode(), user.getText().toLowerCase()));
-                        st.setString(2, CodingProperty.encode(CodeHelper.INFORMATION.getCode(), password.getText().toLowerCase()));
-                        st.executeUpdate();
-
-                        Parent root = FXMLLoader.load(getClass().getClassLoader().getResource(Workbench.file_prefix + "chat/Chat.fxml"));
-                        Stage chat = new Stage();
-                        Scene scene = new Scene(root, 975, 546);
-                        chat.setTitle("Chat Messager - by Noah & Timo");
-                        chat.setResizable(false);
-                        chat.setScene(scene);
-                        chat.show();
-                        Workbench.name = user.getText();
-                        Platform.runLater(() -> {
-
-                            Stage current = (Stage)((Node)e.getSource()).getScene().getWindow();
-                            current.close();
-                        });
-
-
-
-
-                    } catch (SQLException | IOException throwables) {
-                        throwables.printStackTrace();
+                        Thread.sleep(1);
+                    } catch (InterruptedException interruptedException) {
+                        interruptedException.printStackTrace();
                     }
-                } else {
+                }
+                if(super.login == Login.ALLOWED) {
+                    Workbench.client.setClientName(user.getText());
+
+                    Parent root = null;
+                    try {
+                        root = FXMLLoader.load(getClass().getClassLoader().getResource(Workbench.file_prefix + "chat/Chat.fxml"));
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
+                    Stage chat = new Stage();
+                    Scene scene = new Scene(root, 975, 546);
+                    chat.setTitle("Chat Messager - by Noah & Timo");
+                    chat.setResizable(false);
+                    chat.setScene(scene);
+                    chat.show();
+                    Workbench.name = user.getText();
+                    Platform.runLater(() -> {
+
+                        Stage current = (Stage)((Node)e.getSource()).getScene().getWindow();
+                        current.close();
+                    });
+
+
+
+
+
+                } else if(super.login == Login.DENIED) {
                     ErrorMessage.sendErrorMessage("Failed to save Username", "This Username is already taken! Please choose another one!", "Error");
                 }
             } else {
@@ -178,7 +187,7 @@ public class SignupController implements Initializable{
         } else {
             ErrorMessage.sendErrorMessage("Invalid Username or password", "Please fill in the correct informations", "Error");
         }
-
+        super.login = Login.NEUTRAL;
 
     }
 

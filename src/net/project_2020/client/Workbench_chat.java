@@ -9,7 +9,7 @@ import net.project_2020.client.chat.ChatController;
 import net.project_2020.client.login.LoginController;
 import net.project_2020.client.utils.ErrorInit;
 import net.project_2020.client.utils.client.Client;
-import net.project_2020.client.utils.mysql.MySQLManager;
+import net.project_2020.server.utils.mysql.MySQLManager;
 
 import java.io.File;
 
@@ -30,7 +30,6 @@ public class Workbench_chat extends Application{
         primaryStage.setScene(scene);
         primaryStage.show();
         mainstage = primaryStage;
-        Workbench.manager = new MySQLManager(new File(Workbench.file_name), mainstage);
     }
 
     public static void main(String[] args) {
