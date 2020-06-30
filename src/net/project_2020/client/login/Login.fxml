@@ -39,7 +39,7 @@
                               <Font size="14.0" />
                            </font>
                         </JFXCheckBox>
-                        <JFXButton id="login" fx:id="login" onAction="#login" stylesheets="@StyleSheet.css" text="Login" textFill="WHITE">
+                        <JFXButton id="login" fx:id="b_login" onAction="#login" stylesheets="@StyleSheet.css" text="Login" textFill="WHITE">
                            <font>
                               <Font size="14.0" />
                            </font>

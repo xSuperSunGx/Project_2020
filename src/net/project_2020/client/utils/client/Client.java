@@ -43,8 +43,10 @@ public class Client extends Thread {
     public boolean connect() {
         try {
             client = new Socket(this.host, this.port);
-            in = new ObjectInputStream(client.getInputStream());
-            out = new ObjectOutputStream(client.getOutputStream());
+
+            out = new ObjectOutputStream(new BufferedOutputStream(client.getOutputStream()));
+            in = new ObjectInputStream(new BufferedInputStream(client.getInputStream()));
+
             return true;
 
         } catch (ConnectException e) {
@@ -68,6 +70,7 @@ public class Client extends Thread {
     }
 
     public synchronized void disconnect() {
+        if(Workbench.chat != null)sendLeave();
         if (client != null && !client.isClosed()) {
             try {
                 stopp = true;
@@ -144,6 +147,21 @@ public class Client extends Thread {
         return false;
     }
 
+    public void sendJoin() {
+        ServerCommunication s = new ServerCommunication();
+        s.setNickname(super.getName());
+        s.setTag(Tag.CONNECTION);
+        s.setMessage("join");
+        sendObject(s);
+    }
+    public void sendLeave() {
+        ServerCommunication s = new ServerCommunication();
+        s.setNickname(super.getName());
+        s.setTag(Tag.CONNECTION);
+        s.setMessage("leave");
+        sendObject(s);
+    }
+
     @Override
     public void run() {
         try {
@@ -163,6 +181,7 @@ public class Client extends Thread {
                         if(serverCommunication.isFromServer()) {
                             if(new Boolean(serverCommunication.getMessage())) {
                                 login.login = Login.ALLOWED;
+
                             } else {
                                 login.login = Login.DENIED;
                             }
@@ -170,11 +189,22 @@ public class Client extends Thread {
 
                         break;
                     case CONNECTION:
-                        break;
-                    case MESSAGE:
                         if(serverCommunication.getMessage().equalsIgnoreCase("close") && serverCommunication.isFromServer()) {
                             stopp = true;
                             disconnect();
+                        }  else if(serverCommunication.getMessage().equalsIgnoreCase("join")) {
+                            Workbench.chat.v.playerJoin(serverCommunication.getNickname());
+                        } else if(serverCommunication.getMessage().equalsIgnoreCase("leave")) {
+                            Workbench.chat.v.playerLeave(serverCommunication.getNickname());
+
+                        }
+                        break;
+                    case MESSAGE:
+                        if(super.getName().equalsIgnoreCase(serverCommunication.getNickname())) {
+                            Workbench.chat.v.sendMessage(serverCommunication.getMessage());
+                        } else {
+                            Workbench.chat.v.receiveMessage(serverCommunication.getNickname(), serverCommunication.getMessage());
+
                         }
                         break;
                 }

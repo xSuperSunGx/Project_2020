@@ -18,16 +18,22 @@ public class ServerConnection extends Thread{
     private ObjectOutputStream out;
     private boolean stopped;
     private MySQLManager mysql;
+    private Server server;
 
     public void setMysql(MySQLManager mysql) {
         this.mysql = mysql;
     }
 
-    public ServerConnection(Socket s, MySQLManager mysql) {
+    public ServerConnection(Socket s, MySQLManager mysql, Server server) throws IOException {
         this.s = s;
-
+        this.server = server;
         stopped = false;
         this.mysql = mysql;
+
+        out = new ObjectOutputStream(new BufferedOutputStream(s.getOutputStream()));
+
+        in = new ObjectInputStream(new BufferedInputStream(s.getInputStream()));
+        System.out.println(new ObjectOutputStream(s.getOutputStream()));
     }
 
 
@@ -41,8 +47,7 @@ public class ServerConnection extends Thread{
     @Override
     public void run() {
         try {
-            in = new ObjectInputStream(s.getInputStream());
-            out = new ObjectOutputStream(s.getOutputStream());
+
             Object o;
             ServerCommunication message;
             List<ServerCommunication> messages;
@@ -58,10 +63,15 @@ public class ServerConnection extends Thread{
                         case CONNECTION:
                             if(message.getMessage().equalsIgnoreCase("close")) {
                                 this.stopped = true;
+                            } else if(message.getMessage().equalsIgnoreCase("join")) {
+                                this.server.sendToAllClients(message);
+                            } else if(message.getMessage().equalsIgnoreCase("leave")) {
+                                this.server.sendToAllClients(message);
                             }
 
                             break;
                         case MESSAGE:
+                            this.server.sendToAllClients(message);
 
 
                             break;
@@ -100,11 +110,15 @@ public class ServerConnection extends Thread{
                             case CONNECTION:
                                 if(serverCommunication.getMessage().equalsIgnoreCase("close")) {
                                     this.stopped = true;
+                                } else if(serverCommunication.getMessage().equalsIgnoreCase("join")) {
+                                    this.server.sendToAllClients(serverCommunication);
+                                } else if(serverCommunication.getMessage().equalsIgnoreCase("leave")) {
+                                    this.server.sendToAllClients(serverCommunication);
                                 }
 
                                 break;
                             case MESSAGE:
-
+                                this.server.sendToAllClients(serverCommunication);
 
                                 break;
                             case LOGIN:
@@ -144,7 +158,7 @@ public class ServerConnection extends Thread{
             in.close();
             out.close();
             s.close();
-            Server.connections.remove(this);
+            this.server.connections.remove(this);
         }catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
@@ -154,7 +168,7 @@ public class ServerConnection extends Thread{
     public synchronized void disconnect() throws IOException {
         sendToClientFromServer("close");
 
-        Server.connections.remove(this);
+        this.server.connections.remove(this);
     }
 
     public synchronized boolean isStopped() {
@@ -189,7 +203,7 @@ public class ServerConnection extends Thread{
 
     public synchronized  void sendToClientFromServer(Object message) {
         try {
-
+            ((ServerCommunication)message).setNickname("Server");
             out.writeObject(message);
             out.flush();
         } catch (IOException e) {

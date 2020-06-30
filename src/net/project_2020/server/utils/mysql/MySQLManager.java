@@ -15,6 +15,9 @@ import net.project_2020.client.utils.coding.CodingProperty;
 
 import java.io.*;
 import java.sql.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Scanner;
 
 public class MySQLManager {
@@ -110,7 +113,7 @@ public class MySQLManager {
         this.database = "project";
         this.port = 3306;
         this.username = "project";
-        this.password = "BuwuB2W55O8AfOQ6CuJoROP7yEt5BO";
+        this.password = " ";
         this.file = file;
 
         try {
@@ -139,7 +142,7 @@ public class MySQLManager {
                 this.host = s.nextLine();
                 System.out.println();
                 System.out.print("Please enter your MySQL-Port: ");
-                this.port = s.nextInt();
+                String port = s.nextLine();
                 System.out.println();
                 System.out.print("Please enter your MySQL-Database: ");
                 this.database = s.nextLine();
@@ -152,9 +155,13 @@ public class MySQLManager {
                 System.out.println();
                 System.out.println();
                 System.out.println("Connecting...");
+                String[] lol = {host, port, database, username, password};
+                List<String> g = Arrays.asList(new String[]{});
+                g.forEach(s1 -> {
+                    System.out.println(s1);
+                });
 
-
-                MySQLData data = new MySQLData(host,database, port, username, CodingProperty.encode(CodeHelper.INFORMATION.getCode(), this.password));
+                MySQLData data = new MySQLData(host,database, Integer.parseInt(port), username, this.password);
                 storage.store("info", data);
                 storage.save();
 
@@ -166,7 +173,9 @@ public class MySQLManager {
                 this.database = n.getDatabase();
                 this.port = n.getPort();
                 this.username = n.getUsername();
-                this.password = CodingProperty.decode(CodeHelper.INFORMATION.getCode(), n.getPassword());
+                this.password = n.getPassword();
+
+
                 try {
                     con = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database + "?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&autoReconnect=true&characterEncoding=latin1&useConfigs=maxPerformance",
                             username, password);
@@ -188,7 +197,7 @@ public class MySQLManager {
 
     public void configureTables() {
         try {
-            Scanner scanner = new Scanner(getClass().getResourceAsStream("config.cfg"));
+            Scanner scanner = new Scanner(getClass().getClassLoader().getResourceAsStream("net/project_2020/server/utils/mysql/config.cfg"));
 
 
             String gesamt = "";

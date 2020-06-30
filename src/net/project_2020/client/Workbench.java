@@ -34,7 +34,7 @@ public class Workbench extends Application{
     public static final String file_prefix = "net/project_2020/client/";
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("login/Login.fxml"));
+        Parent root = FXMLLoader.load(getClass().getClassLoader().getResource(file_prefix + "login/Login.fxml"));
         //FXMLLoader root = FXMLLoader.load(getClass().getResource("chat/Chat.fxml"));
         primaryStage.setTitle("Chat Messager - by Noah & Timo");
         //root.<ChatController>getController();

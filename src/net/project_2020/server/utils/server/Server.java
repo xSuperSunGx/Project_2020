@@ -16,7 +16,7 @@ import java.util.List;
 
 public class Server extends Thread{
 
-    public static List<ServerConnection> connections = new ArrayList<ServerConnection>();
+    public List<ServerConnection> connections;
     private int port;
     private ServerSocket ss;
     private Socket s;
@@ -35,6 +35,7 @@ public class Server extends Thread{
         this.port = port;
         stop = false;
         this.mysql = mySQLManager;
+        connections = new ArrayList<ServerConnection>();
     }
 
     public synchronized void disconnect() {
@@ -53,10 +54,10 @@ public class Server extends Thread{
         }
     }
 
-    public static synchronized void sendToAllClients(String line) {
-        for (ServerConnection sc : Server.connections) {
+    public synchronized void sendToAllClients(Object line) {
+        for (ServerConnection sc : this.connections) {
             if(sc.isStopped()) {
-                Server.connections.remove(sc);
+                this.connections.remove(sc);
             } else {
 
                 sc.sendToClient(line);
@@ -74,10 +75,7 @@ public class Server extends Thread{
             while(!isStopped()) {
                 s = ss.accept();
                 System.out.println("Connecting...");
-                in = new ObjectInputStream(s.getInputStream());
-                out = new ObjectOutputStream(s.getOutputStream());
-
-                sc = new ServerConnection(s, mysql);
+                sc = new ServerConnection(s, mysql, this);
                 sc.start();
                 connections.add(sc);
                 System.out.println(s + " hat den Server betreten!");

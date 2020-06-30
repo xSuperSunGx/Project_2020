@@ -70,13 +70,15 @@ public class ChatController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        Workbench.chat = this;
+
         logoAnimation(logo);
         settingAnimation(cog_1, cog_2, cog_3, cog_4);
         titleAnimation(title);
         this.pane_chat.toFront();
         v = new ConversationView();
         this.pane_chat.add(v, 0, 0);
-
+        Workbench.client.sendJoin();
         Platform.runLater(() -> {
             ((Stage) pane.getScene().getWindow()).setOnCloseRequest(event -> {
                 System.out.println("Disconnect");
