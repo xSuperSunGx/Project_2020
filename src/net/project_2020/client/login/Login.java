@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import net.project_2020.client.Workbench;
+import net.project_2020.client.utils.ErrorMessage;
 
 import java.awt.*;
 import java.io.IOException;
@@ -39,4 +40,6 @@ public class Login {
     public static int NEUTRAL = 0;
 
 
+    public void errorLogin() {
+    }
 }

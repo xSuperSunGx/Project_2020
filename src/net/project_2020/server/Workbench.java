@@ -11,7 +11,7 @@ public class Workbench {
     public static void main(String[] args) {
 
         MySQLManager mysql = new MySQLManager(new File("info.dat"));
-        Server s = new Server(1304, "Multithreading-Server", mysql);
+        Server s = new Server(7777, "Multithreading-Server", mysql);
         s.start();
 
         Scanner scanner = new Scanner(System.in);

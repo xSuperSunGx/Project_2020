@@ -1,14 +1,13 @@
 package net.project_2020.server.utils.server;
 
-import net.project_2020.server.utils.coding.CodeHelper;
-import net.project_2020.server.utils.coding.CodingProperty;
 import net.project_2020.server.utils.mysql.MySQLManager;
 import net.project_2020.utils.packetoption.ServerCommunication;
 import net.project_2020.utils.packetoption.Tag;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.List;
 
 public class ServerConnection extends Thread{
 
@@ -30,10 +29,18 @@ public class ServerConnection extends Thread{
         stopped = false;
         this.mysql = mysql;
 
-        out = new ObjectOutputStream(new BufferedOutputStream(s.getOutputStream()));
-
-        in = new ObjectInputStream(new BufferedInputStream(s.getInputStream()));
+        out = new ObjectOutputStream(s.getOutputStream());
+        in = new ObjectInputStream(s.getInputStream());
+        /*System.out.println(s.isInputShutdown());
+        System.out.println(s.isConnected());
+        System.out.println(s.isClosed());
+        System.out.println(s.isOutputShutdown());
+        System.out.println(new ObjectInputStream(new FileInputStream(new File("G:\\IntelliJ\\Project_2020\\out\\artifacts\\Client\\info.dat"))));
+        System.out.println(s.getInputStream());
         System.out.println(new ObjectOutputStream(s.getOutputStream()));
+        System.out.println(new ObjectInputStream(s.getInputStream()));
+        System.out.println("Hallo1");
+        System.out.println("Hallo2");*/
     }
 
 
@@ -48,110 +55,64 @@ public class ServerConnection extends Thread{
     public void run() {
         try {
 
-            Object o;
+            String input;
             ServerCommunication message;
-            List<ServerCommunication> messages;
             while(!this.isStopped()) {
                 while(in.available() == 0) {
                     Thread.sleep(1);
                 }
-                o = readFromClient();
-                if(o instanceof ServerCommunication) {
-                    message = (ServerCommunication) o;
 
-                    switch (message.getTag()) {
-                        case CONNECTION:
-                            if(message.getMessage().equalsIgnoreCase("close")) {
-                                this.stopped = true;
-                            } else if(message.getMessage().equalsIgnoreCase("join")) {
-                                this.server.sendToAllClients(message);
-                            } else if(message.getMessage().equalsIgnoreCase("leave")) {
-                                this.server.sendToAllClients(message);
-                            }
+                input = readFromClient();
 
-                            break;
-                        case MESSAGE:
+                message = ServerCommunication.getFromString(input);
+
+                //System.out.println(message.getNickname());
+                //System.out.println(message.getTag().name());
+                //System.out.println(message.getMessage());
+                switch (message.getTag()) {
+                    case CONNECTION:
+                        if(message.getMessage().equalsIgnoreCase("close")) {
+                            this.stopped = true;
+                        } else if(message.getMessage().equalsIgnoreCase("join")) {
                             this.server.sendToAllClients(message);
-
-
-                            break;
-                        case LOGIN:
-                            ServerCommunication s = new ServerCommunication();
-                            s.setTag(Tag.LOGIN);
-                            if(mysql.containsCompination(message.getNickname(), message.getMessage())) {
-                                s.setMessage(new Boolean(true).toString());
-                                super.setName(message.getNickname());
-                            } else {
-                                s.setMessage(new Boolean(false).toString());
-
-                            }
-                            sendToClientFromServer(s);
-                            break;
-                        case REGISTER:
-                            s = new ServerCommunication();
-                            s.setTag(Tag.REGISTER);
-                            if(mysql.containsUsername(message.getNickname())) {
-                                s.setMessage(new Boolean(false).toString()); //Name existiert schon -> false
-                            } else {
-                                s.setMessage(new Boolean(true).toString()); //Name existiert noch nicht -> true
-                                mysql.registerAccount(message.getNickname(), message.getMessage());
-                                super.setName(message.getNickname());
-                            }
-
-                            sendToClientFromServer(s);
-                            break;
-                    }
-
-                } else if(o instanceof List) {
-                    messages = (List<ServerCommunication>) o;
-                    messages.forEach(serverCommunication -> {
-                        ServerCommunication s;
-                        switch (serverCommunication.getTag()) {
-                            case CONNECTION:
-                                if(serverCommunication.getMessage().equalsIgnoreCase("close")) {
-                                    this.stopped = true;
-                                } else if(serverCommunication.getMessage().equalsIgnoreCase("join")) {
-                                    this.server.sendToAllClients(serverCommunication);
-                                } else if(serverCommunication.getMessage().equalsIgnoreCase("leave")) {
-                                    this.server.sendToAllClients(serverCommunication);
-                                }
-
-                                break;
-                            case MESSAGE:
-                                this.server.sendToAllClients(serverCommunication);
-
-                                break;
-                            case LOGIN:
-                                s = new ServerCommunication();
-                                s.setTag(Tag.LOGIN);
-                                if(mysql.containsCompination(serverCommunication.getNickname(), serverCommunication.getMessage())) {
-                                    s.setMessage(new Boolean(true).toString());
-                                    super.setName(serverCommunication.getNickname());
-                                } else {
-                                    s.setMessage(new Boolean(false).toString());
-
-                                }
-                                sendToClientFromServer(s);
-                                break;
-                            case REGISTER:
-                                s = new ServerCommunication();
-                                s.setTag(Tag.REGISTER);
-                                if(mysql.containsUsername(serverCommunication.getNickname())) {
-                                    s.setMessage(new Boolean(false).toString()); //Name existiert schon -> false
-                                } else {
-                                    s.setMessage(new Boolean(true).toString()); //Name existiert noch nicht -> true
-                                    mysql.registerAccount(serverCommunication.getNickname(), serverCommunication.getMessage());
-                                    super.setName(serverCommunication.getNickname());
-                                }
-
-                                sendToClientFromServer(s);
-                                break;
+                        } else if(message.getMessage().equalsIgnoreCase("leave")) {
+                            this.server.sendToAllClientsExept(message, this);
                         }
-                    });
+
+                        break;
+                    case MESSAGE:
+                        this.server.sendToAllClients(message);
+
+
+                        break;
+                    case LOGIN:
+                        ServerCommunication s = new ServerCommunication();
+                        s.setTag(Tag.LOGIN);
+                        System.out.println("login");
+                        if(mysql.containsCompination(message.getNickname(), message.getMessage())) {
+                            s.setMessage(new Boolean(true).toString());
+                            super.setName(message.getNickname());
+                        } else {
+                            s.setMessage(new Boolean(false).toString());
+
+                        }
+                        sendToClientFromServer(s);
+                        System.out.println("send");
+                        break;
+                    case REGISTER:
+                        s = new ServerCommunication();
+                        s.setTag(Tag.REGISTER);
+                        if(mysql.containsUsername(message.getNickname())) {
+                            s.setMessage(new Boolean(false).toString()); //Name existiert schon -> false
+                        } else {
+                            s.setMessage(new Boolean(true).toString()); //Name existiert noch nicht -> true
+                            mysql.registerAccount(message.getNickname(), message.getMessage());
+                            super.setName(message.getNickname());
+                        }
+
+                        sendToClientFromServer(s);
+                        break;
                 }
-
-
-
 
             }
             System.out.println(super.getName() + " hat die Verbindung getrennt!");
@@ -166,7 +127,10 @@ public class ServerConnection extends Thread{
     }
 
     public synchronized void disconnect() throws IOException {
-        sendToClientFromServer("close");
+        ServerCommunication g = new ServerCommunication();
+        g.setTag(Tag.CONNECTION);
+        g.setMessage("close");
+        sendToClientFromServer(g);
 
         this.server.connections.remove(this);
     }
@@ -192,31 +156,30 @@ public class ServerConnection extends Thread{
     }
 
 
-    public synchronized void sendToClient(Object message) {
+    public synchronized void sendToClient(ServerCommunication message) {
         try {
-            out.writeObject(message);
+            out.writeUTF(message.toString());
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public synchronized  void sendToClientFromServer(Object message) {
+    public synchronized  void sendToClientFromServer(ServerCommunication message) {
         try {
-            ((ServerCommunication)message).setNickname("Server");
-            out.writeObject(message);
+            ServerCommunication sc = (ServerCommunication)message;
+            sc.setNickname("Server");
+            out.writeUTF(sc.toString());
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public synchronized Object readFromClient() {
+    public synchronized String readFromClient() {
         try {
-            return in.readObject();
+            return in.readUTF();
         } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
         return null;

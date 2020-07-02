@@ -44,7 +44,7 @@
                                         <Font size="14.0" />
                                     </font>
                                 </JFXCheckBox>
-                            <JFXButton id="signup" fx:id="signup" onAction="#signup" stylesheets="@StyleSheet.css" text="Sign Up" textFill="WHITE">
+                            <JFXButton id="signup" fx:id="b_signup" onAction="#signup" stylesheets="@StyleSheet.css" text="Sign Up" textFill="WHITE">
                                 <font>
                                     <Font size="14.0" />
                                 </font>
@@ -67,7 +67,7 @@
                         </Button>
                     </children>
                 </VBox>
-                    <JFXButton id="login" fx:id="login" layoutX="512.0" layoutY="22.0" onAction="#login" stylesheets="@StyleSheet.css" text="Login" textFill="WHITE">
+                    <JFXButton id="login" fx:id="b_login" layoutX="512.0" layoutY="22.0" onAction="#login" stylesheets="@StyleSheet.css" text="Login" textFill="WHITE">
                         <font>
                             <Font size="14.0" />
                         </font>

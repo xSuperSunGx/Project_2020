@@ -27,6 +27,8 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import net.project_2020.client.Workbench;
+import net.project_2020.client.login.thread.WaitingforLogin;
+import net.project_2020.client.login.thread.WaitingforSignup;
 import net.project_2020.client.utils.ErrorMessage;
 import net.project_2020.client.utils.client.Client;
 import net.project_2020.client.utils.coding.CodeHelper;
@@ -40,7 +42,7 @@ public class SignupController extends Login implements Initializable{
     @FXML
     public FontAwesomeIconView signal;
     @FXML
-    public JFXButton menu, menu2, settings, contact;
+    public JFXButton menu, menu2, settings, contact, b_signup;
     @FXML
     public Label copyright;
     @FXML
@@ -57,13 +59,17 @@ public class SignupController extends Login implements Initializable{
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         Workbench.login = this;
-        Workbench.client =  new Client("localhost", 1304, Workbench.login);
-
-        if(!Workbench.client.connect()) {
-            super.sendDisconnect();
-            pane.setDisable(true);
+        if(Workbench.client == null) {
+            Workbench.client = new Client("localhost", 7777, Workbench.login);
+            if(!Workbench.client.connect()) {
+                super.sendDisconnect();
+                pane.setDisable(true);
+            } else {
+                Workbench.client.start();
+            }
         } else {
-            Workbench.client.start();
+            Workbench.client.setLogin(Workbench.login);
+
         }
 
         menu.setText("");
@@ -145,52 +151,23 @@ public class SignupController extends Login implements Initializable{
                 && !password.getText().equalsIgnoreCase("") && !confirm.getText().equalsIgnoreCase("")) {
             if(password.getText().equals(confirm.getText())) {
                 Workbench.client.registerAccount(user.getText(), password.getText());
-                while(super.login == Login.NEUTRAL) {
-                    try {
-                        Thread.sleep(1);
-                    } catch (InterruptedException interruptedException) {
-                        interruptedException.printStackTrace();
-                    }
-                }
-                if(super.login == Login.ALLOWED) {
-                    Workbench.client.setClientName(user.getText());
-
-                    Parent root = null;
-                    try {
-                        root = FXMLLoader.load(getClass().getClassLoader().getResource(Workbench.file_prefix + "chat/Chat.fxml"));
-                    } catch (IOException ioException) {
-                        ioException.printStackTrace();
-                    }
-                    Stage chat = new Stage();
-                    Scene scene = new Scene(root, 975, 546);
-                    chat.setTitle("Chat Messager - by Noah & Timo");
-                    chat.setResizable(false);
-                    chat.setScene(scene);
-                    chat.show();
-                    Workbench.name = user.getText();
-                    Platform.runLater(() -> {
-
-                        Stage current = (Stage)((Node)e.getSource()).getScene().getWindow();
-                        current.close();
-                    });
-
-
-
-
-
-                } else if(super.login == Login.DENIED) {
-                    ErrorMessage.sendErrorMessage("Failed to save Username", "This Username is already taken! Please choose another one!", "Error");
-                }
+                WaitingforSignup wfl = new WaitingforSignup(this, e, user.getText());
+                wfl.start();
+                b_signup.setDisable(true);
             } else {
                 ErrorMessage.sendErrorMessage("Failed by comparing Password","Please try again und fill the Passwords correctly!", "Error");
             }
         } else {
             ErrorMessage.sendErrorMessage("Invalid Username or password", "Please fill in the correct informations", "Error");
         }
-        super.login = Login.NEUTRAL;
+
 
     }
 
+    @Override
+    public void errorLogin() {
+        ErrorMessage.sendErrorMessage("Failed to signup", "Your Username is already taken!", "Error");
 
+    }
 
 }

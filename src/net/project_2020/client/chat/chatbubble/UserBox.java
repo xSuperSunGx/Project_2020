@@ -45,7 +45,7 @@ public class UserBox extends HBox{
 
         if(direction == UserAction.JOIN){
             configureJoin();
-        } else{
+        } else if(direction == UserAction.LEAVE){
             configureLeave();
         }
     }

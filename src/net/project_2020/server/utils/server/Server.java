@@ -1,14 +1,11 @@
 package net.project_2020.server.utils.server;
 
 
-import net.project_2020.server.utils.coding.CodeHelper;
-import net.project_2020.server.utils.coding.CodingProperty;
 import net.project_2020.server.utils.mysql.MySQLManager;
+import net.project_2020.server.utils.server.thread.ListRemover;
+import net.project_2020.utils.packetoption.ServerCommunication;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -23,8 +20,6 @@ public class Server extends Thread{
     private ServerConnection sc;
     private boolean stop;
     private MySQLManager mysql;
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
 
     public int getPort() {
         return port;
@@ -54,7 +49,7 @@ public class Server extends Thread{
         }
     }
 
-    public synchronized void sendToAllClients(Object line) {
+    public synchronized void sendToAllClients(ServerCommunication line) {
         for (ServerConnection sc : this.connections) {
             if(sc.isStopped()) {
                 this.connections.remove(sc);
@@ -70,6 +65,8 @@ public class Server extends Thread{
     @Override
     public void run() {
         try {
+            ListRemover lr = new ListRemover(this);
+            lr.start();
             ss = new ServerSocket(this.port);
             System.out.println("Server listened on Port " + this.port);
             while(!isStopped()) {
@@ -90,4 +87,15 @@ public class Server extends Thread{
         return this.stop;
     }
 
+    public void sendToAllClientsExept(ServerCommunication message, ServerConnection serverConnection) {
+        for (ServerConnection sc : this.connections) {
+            if(sc.isStopped()) {
+                this.connections.remove(sc);
+            } else if(!sc.equals(serverConnection)){
+
+                sc.sendToClient(message);
+
+            }
+        }
+    }
 }

@@ -3,11 +3,9 @@ package net.project_2020.client.utils.client;
 import javafx.application.Platform;
 import net.project_2020.client.Workbench;
 import net.project_2020.client.login.Login;
-import net.project_2020.client.utils.coding.PacketFormat;
 import net.project_2020.utils.packetoption.ServerCommunication;
 import net.project_2020.utils.packetoption.Tag;
 
-import javax.swing.text.html.HTML;
 import java.io.*;
 import java.net.ConnectException;
 import java.net.Socket;
@@ -21,6 +19,9 @@ public class Client extends Thread {
     private ObjectOutputStream out;
     private boolean stopp;
     private Login login;
+    private ServerCommunication g;
+    private String helping;
+
 
 
 
@@ -33,6 +34,9 @@ public class Client extends Thread {
     }
 
 
+    public void setLogin(Login login) {
+        this.login = login;
+    }
 
     public void setClientName(String name) {
         super.setName(name);
@@ -40,19 +44,19 @@ public class Client extends Thread {
 
 
 
-    public boolean connect() {
+    public final boolean connect() {
+        if(client != null)return true;
         try {
             client = new Socket(this.host, this.port);
 
-            out = new ObjectOutputStream(new BufferedOutputStream(client.getOutputStream()));
-            in = new ObjectInputStream(new BufferedInputStream(client.getInputStream()));
+            out = new ObjectOutputStream(client.getOutputStream());
+            in = new ObjectInputStream(client.getInputStream());
 
             return true;
 
         } catch (ConnectException e) {
             e.printStackTrace();
             Platform.runLater(() -> {
-                login.sendDisconnect();
                 Workbench.mainstage.close();
 
             });
@@ -61,7 +65,6 @@ public class Client extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
             Platform.runLater(() -> {
-                login.sendDisconnect();
                 Workbench.mainstage.close();
 
             });
@@ -70,14 +73,14 @@ public class Client extends Thread {
     }
 
     public synchronized void disconnect() {
-        if(Workbench.chat != null)sendLeave();
         if (client != null && !client.isClosed()) {
             try {
+                sendLeave();
                 stopp = true;
                 ServerCommunication s = new ServerCommunication();
                 s.setMessage("close");
                 s.setTag(Tag.CONNECTION);
-                sendObject(s);
+                sendUTF(s);
 
                 sleep(1000);
                 client.close();
@@ -92,59 +95,38 @@ public class Client extends Thread {
         }
     }
 
-    public synchronized void sendObject(Object message) {
+    public synchronized void sendUTF(ServerCommunication message) {
 
         try {
-            out.writeObject(message);
+            out.writeUTF(message.toString());
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public synchronized Object readObject() {
+    public synchronized String readInput() {
         try {
-            return in.readObject();
-        } catch (IOException | ClassNotFoundException e) {
+            return in.readUTF();
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
     }
 
 
-    public boolean loginAccount(String username, String password) {
+    public void loginAccount(String username, String password) {
         ServerCommunication serverCommunication = new ServerCommunication();
         serverCommunication.loginRequest( username,  password);
 
-        sendObject(serverCommunication);
-        try {
-            while (!this.isStopped() && in.available() == 0) {
-                Thread.sleep(1);
-            }
-            ServerCommunication s = (ServerCommunication) readObject();
-            return s.getMessage().equalsIgnoreCase("true");
-
-        }catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-        return false;
+        sendUTF(serverCommunication);
     }
-    public boolean registerAccount(String username, String password) {
+    public void registerAccount(String username, String password) {
         ServerCommunication serverCommunication = new ServerCommunication();
         serverCommunication.registerRequest( username,  password);
 
-        sendObject(serverCommunication);
-        try {
-            while (!this.isStopped() && in.available() == 0) {
-                Thread.sleep(1);
-            }
-            ServerCommunication s = (ServerCommunication) readObject();
-            return s.getMessage().equalsIgnoreCase("true");
+        sendUTF(serverCommunication);
 
-        }catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-        return false;
     }
 
     public void sendJoin() {
@@ -152,25 +134,24 @@ public class Client extends Thread {
         s.setNickname(super.getName());
         s.setTag(Tag.CONNECTION);
         s.setMessage("join");
-        sendObject(s);
+        sendUTF(s);
     }
     public void sendLeave() {
         ServerCommunication s = new ServerCommunication();
         s.setNickname(super.getName());
         s.setTag(Tag.CONNECTION);
         s.setMessage("leave");
-        sendObject(s);
+        sendUTF(s);
     }
 
     @Override
     public void run() {
         try {
-            PacketFormat format;
             while (!this.isStopped()) {
                 while(!this.isStopped() && in.available() == 0) {
                     Thread.sleep(1);
                 }
-                ServerCommunication serverCommunication = (ServerCommunication) in.readObject();
+                ServerCommunication serverCommunication = ServerCommunication.getFromString(readInput());
 
 
                 System.out.println("Empfangen");
@@ -189,21 +170,27 @@ public class Client extends Thread {
 
                         break;
                     case CONNECTION:
+                        g = serverCommunication;
                         if(serverCommunication.getMessage().equalsIgnoreCase("close") && serverCommunication.isFromServer()) {
                             stopp = true;
                             disconnect();
                         }  else if(serverCommunication.getMessage().equalsIgnoreCase("join")) {
-                            Workbench.chat.v.playerJoin(serverCommunication.getNickname());
+                            Platform.runLater(() -> Workbench.chat.v.playerJoin(g.getNickname()));
                         } else if(serverCommunication.getMessage().equalsIgnoreCase("leave")) {
-                            Workbench.chat.v.playerLeave(serverCommunication.getNickname());
+                            Platform.runLater(() -> Workbench.chat.v.playerLeave(g.getNickname()));
 
                         }
                         break;
                     case MESSAGE:
+                        g = serverCommunication;
                         if(super.getName().equalsIgnoreCase(serverCommunication.getNickname())) {
-                            Workbench.chat.v.sendMessage(serverCommunication.getMessage());
+                            helping = serverCommunication.getMessage()
+                                    .replaceAll("oe", "ö").replaceAll("ae", "ä").replaceAll("ue","ü").replaceAll("%S", "ß");
+                            Platform.runLater(() -> Workbench.chat.v.sendMessage(helping));
                         } else {
-                            Workbench.chat.v.receiveMessage(serverCommunication.getNickname(), serverCommunication.getMessage());
+                            helping = serverCommunication.getMessage()
+                                    .replaceAll("oe", "ö").replaceAll("ae", "ä").replaceAll("ue","ü").replaceAll("%S", "ß");
+                            Platform.runLater(() -> Workbench.chat.v.receiveMessage(g.getNickname(), helping));
 
                         }
                         break;
@@ -215,8 +202,6 @@ public class Client extends Thread {
                 login.sendDisconnect();
             });
         } catch (InterruptedException | IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
 

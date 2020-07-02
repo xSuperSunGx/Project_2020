@@ -25,6 +25,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import net.project_2020.client.Workbench;
+import net.project_2020.client.login.thread.WaitingforLogin;
 import net.project_2020.client.utils.ErrorMessage;
 import net.project_2020.client.utils.client.Client;
 
@@ -35,7 +36,7 @@ public class LoginController extends Login implements Initializable{
 	@FXML
 	public FontAwesomeIconView signal;
 	@FXML
-	public JFXButton menu, menu2, settings, contact;
+	public JFXButton menu, menu2, settings, contact, b_login;
 	@FXML
 	public Label copyright;
 	@FXML
@@ -54,13 +55,19 @@ public class LoginController extends Login implements Initializable{
 	public void initialize(URL location, ResourceBundle resources) {
 
 		Workbench.login = this;
-		Workbench.client =  new Client("localhost", 1304, Workbench.login);
-		if(!Workbench.client.connect()) {
-			super.sendDisconnect();
-			pane.setDisable(true);
+		if(Workbench.client == null) {
+			Workbench.client = new Client("localhost", 7777, Workbench.login);
+			if(!Workbench.client.connect()) {
+				super.sendDisconnect();
+				pane.setDisable(true);
+			} else {
+				Workbench.client.start();
+			}
 		} else {
-			Workbench.client.start();
+			Workbench.client.setLogin(Workbench.login);
+
 		}
+
 		menu.setText("");
 		menu2.setText("");
 		menuanchor.setVisible(false);
@@ -119,45 +126,10 @@ public class LoginController extends Login implements Initializable{
 
 		if(!user.getText().equalsIgnoreCase("")
 				&& !password.getText().equalsIgnoreCase("")) {
-
 			Workbench.client.loginAccount(user.getText(), password.getText());
-
-			while(super.login == Login.NEUTRAL) {
-				try {
-					Thread.sleep(1);
-				} catch (InterruptedException interruptedException) {
-					interruptedException.printStackTrace();
-				}
-			}
-			if(super.login == Login.ALLOWED) {
-				Workbench.client.setClientName(user.getText());
-				try {
-					Workbench.name = user.getText();
-
-
-					Parent root = FXMLLoader.load(getClass().getClassLoader().getResource(Workbench.file_prefix + "chat/Chat.fxml"));
-					Stage chat = new Stage();
-					Scene scene = new Scene(root, 975, 546);
-					chat.setTitle("Chat Messager - by Noah & Timo");
-					chat.setResizable(false);
-					chat.setScene(scene);
-					chat.show();
-					Platform.runLater(() -> {
-
-						Stage current = (Stage)((Node)e.getSource()).getScene().getWindow();
-						current.close();
-
-					});
-
-
-
-
-				} catch (IOException throwables) {
-					throwables.printStackTrace();
-				}
-			} else if(super.login == Login.DENIED) {
-				ErrorMessage.sendErrorMessage("Failed to login", "Incorrect Password or Username!", "Error");
-			}
+			WaitingforLogin wfl = new WaitingforLogin(this, e, user.getText());
+			wfl.start();
+			b_login.setDisable(true);
 
 
 
@@ -185,7 +157,11 @@ public class LoginController extends Login implements Initializable{
 		}
 	}
 
+	@Override
+	public void errorLogin() {
+		ErrorMessage.sendErrorMessage("Failed to login", "Incorrect Password or Username!", "Error");
 
+	}
 
 
 }

@@ -52,6 +52,8 @@ public class ChatController implements Initializable {
     public FontAwesomeIconView cog_1, cog_2, cog_3, cog_4;
     @FXML
     public JFXTextField d_host;
+    @FXML
+    public AnchorPane scr;
     public JFXTextField d_port;
     public JFXTextField d_data;
     public JFXTextField d_user;
@@ -77,7 +79,15 @@ public class ChatController implements Initializable {
         titleAnimation(title);
         this.pane_chat.toFront();
         v = new ConversationView();
-        this.pane_chat.add(v, 0, 0);
+        AnchorPane.setBottomAnchor(v, 0D);
+        AnchorPane.setTopAnchor(v, 0D);
+        AnchorPane.setLeftAnchor(v, 0D);
+        AnchorPane.setRightAnchor(v, 0D);
+
+        scr.getChildren().add(v);
+
+
+
         Workbench.client.sendJoin();
         Platform.runLater(() -> {
             ((Stage) pane.getScene().getWindow()).setOnCloseRequest(event -> {
@@ -207,15 +217,15 @@ public class ChatController implements Initializable {
     public void send() {
 
         if (!text.getText().equalsIgnoreCase("")) {
-            String message = CodingProperty.encode(CodeHelper.MESSAGE.getCode(), text.getText()
-                    .replaceAll("ö", "oe").replaceAll("ä", "ae").replaceAll("ü","ue").replaceAll("ß", "%S"));
+            String message = text.getText()
+                    .replaceAll("ö", "oe").replaceAll("ä", "ae").replaceAll("ü","ue").replaceAll("ß", "%S");
             //this.addMessage(message, "Du");
             text.clear();
             ServerCommunication s = new ServerCommunication();
             s.setTag(Tag.MESSAGE);
             s.setNickname(Workbench.client.getName());
             s.setMessage(message);
-            Workbench.client.sendObject(s);
+            Workbench.client.sendUTF(s);
         }
     }
 
