@@ -173,7 +173,7 @@ public class MySQLManager {
                 this.database = n.getDatabase();
                 this.port = n.getPort();
                 this.username = n.getUsername();
-                this.password = n.getPassword();
+                this.password = CodingProperty.decode(CodeHelper.INFORMATION.getCode(), n.getPassword());
 
 
                 try {
