@@ -12,7 +12,6 @@ import javafx.stage.WindowEvent;
 import net.project_2020.client.Workbench;
 import net.project_2020.client.login.Login;
 import net.project_2020.client.login.SignupController;
-import net.project_2020.client.utils.ErrorMessage;
 
 import java.io.IOException;
 
@@ -58,7 +57,7 @@ public class WaitingforSignup extends Thread{
                 chat.setOnCloseRequest(new EventHandler<WindowEvent>() {
                     @Override
                     public void handle(WindowEvent event) {
-                        Workbench.client.disconnect();
+                        Workbench.client.disconnect(chat);
                     }
                 });
 

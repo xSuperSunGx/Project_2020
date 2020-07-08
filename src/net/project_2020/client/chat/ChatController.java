@@ -25,8 +25,6 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import net.project_2020.client.chat.chatbubble.ConversationView;
 import net.project_2020.client.Workbench;
-import net.project_2020.client.utils.coding.CodeHelper;
-import net.project_2020.client.utils.coding.CodingProperty;
 import net.project_2020.utils.packetoption.ServerCommunication;
 import net.project_2020.utils.packetoption.Tag;
 
@@ -92,7 +90,7 @@ public class ChatController implements Initializable {
         Platform.runLater(() -> {
             ((Stage) pane.getScene().getWindow()).setOnCloseRequest(event -> {
                 System.out.println("Disconnect");
-                Workbench.client.disconnect();
+                Workbench.client.disconnect((Stage) pane.getScene().getWindow());
                 Platform.exit();
             });
             ;

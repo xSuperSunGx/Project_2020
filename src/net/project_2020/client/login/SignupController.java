@@ -2,8 +2,6 @@ package net.project_2020.client.login;
 
 import java.io.IOException;
 import java.net.URL;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.ResourceBundle;
 
 import com.jfoenix.controls.JFXButton;
@@ -27,13 +25,9 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import net.project_2020.client.Workbench;
-import net.project_2020.client.login.thread.WaitingforLogin;
 import net.project_2020.client.login.thread.WaitingforSignup;
 import net.project_2020.client.utils.ErrorMessage;
 import net.project_2020.client.utils.client.Client;
-import net.project_2020.client.utils.coding.CodeHelper;
-import net.project_2020.client.utils.coding.CodingProperty;
-import sun.rmi.runtime.Log;
 
 public class SignupController extends Login implements Initializable{
 
@@ -131,10 +125,10 @@ public class SignupController extends Login implements Initializable{
             Parent root = FXMLLoader.load(getClass().getResource("Login.fxml"));
             Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
             Scene scene = new Scene(root, 600, 400);
-            stage.setTitle("Login - by NNoah & Timo");
+            stage.setTitle("Login - by Noah & Timo");
             stage.setResizable(false);
             stage.setOnCloseRequest(event -> {
-                Workbench.client.disconnect();
+                Workbench.client.disconnect(stage);
             });
             stage.setScene(scene);
             stage.show();

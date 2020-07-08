@@ -143,10 +143,10 @@ public class LoginController extends Login implements Initializable{
 			Parent root = FXMLLoader.load(getClass().getResource("Signup.fxml"));
 			Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
 			Scene scene = new Scene(root, 600, 400);
-			stage.setTitle("Sign Up - by NNoah & Timo");
+			stage.setTitle("Sign Up - by Noah & Timo");
 			stage.setResizable(false);
 			stage.setOnCloseRequest(event -> {
-				Workbench.client.disconnect();
+				Workbench.client.disconnect(stage);
 			});
 			stage.setScene(scene);
 			stage.show();

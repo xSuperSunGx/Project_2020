@@ -65,8 +65,9 @@ public class ServerConnection extends Thread{
                 input = readFromClient();
 
                 message = ServerCommunication.getFromString(input);
+                int i = 9;
 
-                //System.out.println(message.getNickname());
+            //System.out.println(message.getNickname());
                 //System.out.println(message.getTag().name());
                 //System.out.println(message.getMessage());
                 switch (message.getTag()) {

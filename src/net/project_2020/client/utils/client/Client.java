@@ -1,6 +1,7 @@
 package net.project_2020.client.utils.client;
 
 import javafx.application.Platform;
+import javafx.stage.Stage;
 import net.project_2020.client.Workbench;
 import net.project_2020.client.login.Login;
 import net.project_2020.utils.packetoption.ServerCommunication;
@@ -72,7 +73,31 @@ public class Client extends Thread {
         return false;
     }
 
-    public synchronized void disconnect() {
+    public synchronized void disconnect(Stage stage) {
+        if (client != null && !client.isClosed()) {
+            try {
+                if(stage.getTitle().startsWith("Chat")) {
+                    sendLeave();
+                }
+                stopp = true;
+                ServerCommunication s = new ServerCommunication();
+                s.setMessage("close");
+                s.setTag(Tag.CONNECTION);
+                sendUTF(s);
+
+                sleep(1000);
+                client.close();
+                client = null;
+                in.close();
+                out.close();
+                in = null;
+                out = null;
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    private synchronized void disconnect() {
         if (client != null && !client.isClosed()) {
             try {
                 sendLeave();
@@ -94,6 +119,7 @@ public class Client extends Thread {
             }
         }
     }
+
 
     public synchronized void sendUTF(ServerCommunication message) {
 
@@ -117,8 +143,10 @@ public class Client extends Thread {
 
     public void loginAccount(String username, String password) {
         ServerCommunication serverCommunication = new ServerCommunication();
-        serverCommunication.loginRequest( username,  password);
-
+        //erverCommunication.loginRequest( username,  password);
+        serverCommunication.setNickname(username);
+        serverCommunication.setMessage(password);
+        serverCommunication.setTag(Tag.LOGIN);
         sendUTF(serverCommunication);
     }
     public void registerAccount(String username, String password) {
