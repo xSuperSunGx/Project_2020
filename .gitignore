@@ -9,3 +9,4 @@ com/
 *.fxbuild
 /lib/fontawesomefx-8.9.jar
 src/info.dat
+info.dat
